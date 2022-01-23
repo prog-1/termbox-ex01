@@ -53,42 +53,30 @@ waits for an event and returns it as the `Event` struct.
 ## Real-time events
 
 ```golang
-func main() {
-  // Initialize termbox.
-  err := termbox.Init()
-  if err != nil {
-    log.Fatalf("failed to init termbox: %v", err)
-  }
-  defer termbox.Close()
-
-  // Other initialization goes here.
-
-
-  // Create a channel and a goroutine for receiving termbox events without
-  // blocking the main event loop.
-  eventQueue := make(chan termbox.Event)
-  go func() {
-    for {
-      eventQueue <- termbox.PollEvent()
-    }
-  }()
-
+// Create a channel and a goroutine for receiving termbox events without
+// blocking the main event loop.
+eventQueue := make(chan termbox.Event)
+go func() {
   for {
-    select {
-      case ev := <-eventQueue:
-        if ev.Type == termbox.EventKey {
-          switch ev.Key {
-          case termbox.KeyArrowLeft:
-            // Add what to do on Left arrow key pressed.
-          case termbox.KeyArrowRight:
-            // Add what to do on Right arrow key pressed.
-          // Process other key presses.
-          }
+    eventQueue <- termbox.PollEvent()
+  }
+}()
+
+// Event loop.
+for {
+  select {
+    case ev := <-eventQueue:
+      if ev.Type == termbox.EventKey {
+        switch ev.Key {
+        case termbox.KeyArrowLeft:
+          // Add what to do on Left arrow key pressed.
+        case termbox.KeyArrowRight:
+          // Add what to do on Right arrow key pressed.
+        // Process other key presses.
         }
-      default:
-        // Add what to do on every step.
       }
-    }
+    default:
+      // Add what to do on every step.
   }
 }
 ```
