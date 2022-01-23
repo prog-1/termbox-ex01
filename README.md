@@ -5,7 +5,7 @@
 Before using `termbox`, you must install it using the following command:
 
 ```shell
-go get	"github.com/nsf/termbox-go"
+go get  "github.com/nsf/termbox-go"
 ```
 
 `termbox` must be included in source code:
@@ -19,7 +19,7 @@ import "github.com/nsf/termbox-go"
 ```golang
 err := termbox.Init()
 if err != nil {
-	log.Fatalf("failed to init termbox: %v", err)
+  log.Fatalf("failed to init termbox: %v", err)
 }
 defer termbox.Close()
 ```
@@ -54,42 +54,42 @@ waits for an event and returns it as the `Event` struct.
 
 ```golang
 func main() {
-	// Initialize termbox.
-	err := termbox.Init()
-	if err != nil {
-		log.Fatalf("failed to init termbox: %v", err)
-	}
-	defer termbox.Close()
+  // Initialize termbox.
+  err := termbox.Init()
+  if err != nil {
+    log.Fatalf("failed to init termbox: %v", err)
+  }
+  defer termbox.Close()
 
-	// Other initialization goes here.
+  // Other initialization goes here.
 
 
-	// Create a channel and a goroutine for receiving termbox events without
-	// blocking the main event loop.
-	eventQueue := make(chan termbox.Event)
-	go func() {
-		for {
-			eventQueue <- termbox.PollEvent()
-		}
-	}()
+  // Create a channel and a goroutine for receiving termbox events without
+  // blocking the main event loop.
+  eventQueue := make(chan termbox.Event)
+  go func() {
+    for {
+      eventQueue <- termbox.PollEvent()
+    }
+  }()
 
-	for {
-		select {
-			case ev := <-eventQueue:
-				if ev.Type == termbox.EventKey {
-					switch ev.Key {
-					case termbox.KeyArrowLeft:
-						// Add what to do on Left arrow key pressed.
-					case termbox.KeyArrowRight:
-						// Add what to do on Right arrow key pressed.
-					// Process other key presses.
-					}
-				}
-			default:
-				// Add what to do on every step.
-			}
-		}
-	}
+  for {
+    select {
+      case ev := <-eventQueue:
+        if ev.Type == termbox.EventKey {
+          switch ev.Key {
+          case termbox.KeyArrowLeft:
+            // Add what to do on Left arrow key pressed.
+          case termbox.KeyArrowRight:
+            // Add what to do on Right arrow key pressed.
+          // Process other key presses.
+          }
+        }
+      default:
+        // Add what to do on every step.
+      }
+    }
+  }
 }
 ```
 
