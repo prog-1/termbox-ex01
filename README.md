@@ -83,7 +83,13 @@ for {
 
 # Exercises
 
-All exercises must be completed by modifying `04_snake_game` program.
+## Exercises 1
+
+Modify `02_snake_animation` so the snake moves along the sides of a rectangle. 
+
+## Exercises 2
+
+All exercises here must be completed by modifying `04_snake_game` program.
 
 1. Draw the field borders (walls).
 2. Collisions (alternatives):
