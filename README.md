@@ -85,7 +85,9 @@ for {
 
 ## Exercises 1
 
-Modify `02_snake_animation` so the snake moves along the sides of a rectangle. 
+Modify `02_snake_animation` so the snake moves along the sides of a rectangle.
+
+![demo](snake_demo_01.gif)
 
 ## Exercises 2
 
