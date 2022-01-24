@@ -26,7 +26,7 @@ defer termbox.Close()
 
 ## Buffer
 
-`termbox` has an internal buffer [CellBuffer](https://pkg.go.dev/github.com/nsf/termbox-go#CellBuffer]) of type `[]Cell`, where [`Cell`](https://pkg.go.dev/github.com/nsf/termbox-go#Cell) is a struct consisting of a rune and two [attributes](https://pkg.go.dev/github.com/nsf/termbox-go#Attribute): foreground and background colors.
+`termbox` has an internal buffer [CellBuffer](https://pkg.go.dev/github.com/nsf/termbox-go#CellBuffer) of type `[]Cell`, where [`Cell`](https://pkg.go.dev/github.com/nsf/termbox-go#Cell) is a struct consisting of a rune and two [attributes](https://pkg.go.dev/github.com/nsf/termbox-go#Attribute): foreground and background colors.
 
 The buffer is synchronized with the terminal using [`Flush()`](https://pkg.go.dev/github.com/nsf/termbox-go#Flush) function.
 
