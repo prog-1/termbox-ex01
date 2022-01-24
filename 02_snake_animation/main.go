@@ -55,7 +55,7 @@ func step(s snake) snake {
 
 // Tasks:
 // 1. Change the initial position of the snake and the movement direction.
-// 2. Modify the snake behavior, so it makes 3 steps up, 3 steps down, then repeats.
+// 2. Modify the snake trajectory, so it moves along the sides of a rectangle.
 //    Hint: You may need to introduce an additional field to the snake struct.
 func main() {
 	// Initialize termbox.
