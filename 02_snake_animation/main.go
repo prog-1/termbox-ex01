@@ -29,7 +29,7 @@ type snake struct {
 
 // newSnake returns a new struct instance representing a snake.
 func newSnake() snake {
-	return snake{coord{5, 5}, coord{1, 0}}
+	return snake{coord{6, 6}, coord{0, -1}}
 }
 
 // Redraws the terminal.
@@ -41,8 +41,12 @@ func drawSnake(s snake) {
 
 // Makes a move for a snake and returns a snake with an updated position.
 func moveSnake(s snake) snake {
-	s.pos.x += s.dir.x
 	s.pos.y += s.dir.y
+	if s.pos.y == s.pos.x-3 {
+		s.dir.y = 1
+	} else if s.pos.y == s.pos.x {
+		s.dir.y = -1
+	}
 	return s
 }
 
