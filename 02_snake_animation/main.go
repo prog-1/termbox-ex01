@@ -31,7 +31,7 @@ type snake struct {
 func newSnake() snake {
 	// changing size of terminal, you also change size of rectangle where we can see snake
 	//  So everyone will have their own game size and snakes position depending on the size of their terminal...
-	return snake{coord{5, 5}, coord{1, 0}}
+	return snake{coord{50, 6}, coord{1, 0}}
 }
 
 // Redraws the terminal.
@@ -90,30 +90,22 @@ func main() {
 
 	s := newSnake()
 	// This is the main event loop.
-	for {
-		if s.pos.x == 15 && s.pos.y == 10 {
-			for s.pos.x != 5 {
-				s = stepBack(s)
-				time.Sleep(100 * time.Millisecond)
-			}
+	for { // its perfectly works even without any if statements
+		for s.pos.x != 5 {
+			s = stepBack(s)
+			time.Sleep(100 * time.Millisecond)
 		}
-		if s.pos.x == 5 && s.pos.y == 10 {
-			for s.pos.y != 5 {
-				s = stepDown(s)
-				time.Sleep(100 * time.Millisecond)
-			}
+		for s.pos.y != 5 {
+			s = stepDown(s)
+			time.Sleep(100 * time.Millisecond)
 		}
-		if s.pos.x == 5 && s.pos.y == 5 {
-			for s.pos.x != 15 {
-				s = stepForward(s)
-				time.Sleep(100 * time.Millisecond)
-			}
+		for s.pos.x != 15 {
+			s = stepForward(s)
+			time.Sleep(100 * time.Millisecond)
 		}
-		if s.pos.x == 15 && s.pos.y == 5 {
-			for s.pos.y != 10 {
-				s = stepUp(s)
-				time.Sleep(100 * time.Millisecond)
-			}
+		for s.pos.y != 10 {
+			s = stepUp(s)
+			time.Sleep(100 * time.Millisecond)
 		}
 	}
 }
