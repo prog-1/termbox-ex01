@@ -29,7 +29,9 @@ type snake struct {
 
 // newSnake returns a new struct instance representing a snake.
 func newSnake() snake {
-	return snake{coord{5, 5}, coord{1, 0}}
+	for {
+		return snake{coord{5, 8}, coord{1, 0}}
+	}
 }
 
 // Redraws the terminal.
@@ -48,6 +50,20 @@ func moveSnake(s snake) snake {
 
 // Makes a single iteration for a snake.
 func step(s snake) snake {
+	x, y := s.pos.x, s.pos.y
+	if x == 5 && y == 8 {
+		s.dir.x = 1
+		s.dir.y = 0
+	} else if x == 30 && y == 8 {
+		s.dir.x = 0
+		s.dir.y = 1
+	} else if x == 30 && y == 13 {
+		s.dir.x = -1
+		s.dir.y = 0
+	} else if x == 5 && y == 13 {
+		s.dir.x = 0
+		s.dir.y = -1
+	}
 	s = moveSnake(s)
 	drawSnake(s)
 	return s
