@@ -14,6 +14,11 @@ const (
 	snakeBgColor = termbox.ColorDefault
 )
 
+const (
+	steps = 3
+	x, y  = 10, 10 // x, y = s.pos.x(original), s.pos.y(original)
+)
+
 // coord is a coordinate on a plane.
 type coord struct {
 	x, y int
@@ -29,7 +34,7 @@ type snake struct {
 
 // newSnake returns a new struct instance representing a snake.
 func newSnake() snake {
-	return snake{coord{6, 6}, coord{0, -1}}
+	return snake{coord{10, 10}, coord{0, -1}}
 }
 
 // Redraws the terminal.
@@ -41,11 +46,19 @@ func drawSnake(s snake) {
 
 // Makes a move for a snake and returns a snake with an updated position.
 func moveSnake(s snake) snake {
+	s.pos.x += s.dir.x
 	s.pos.y += s.dir.y
-	if s.pos.y == s.pos.x-3 {
-		s.dir.y = 1
-	} else if s.pos.y == s.pos.x {
-		s.dir.y = -1
+	if s.pos.y == y-steps && s.pos.x == x {
+		s.dir = coord{1, 0}
+	}
+	if s.pos.x == x+steps && s.pos.y == y-steps {
+		s.dir = coord{0, 1}
+	}
+	if s.pos.y == y && s.pos.x == x+steps {
+		s.dir = coord{-1, 0}
+	}
+	if s.pos.x == x && s.pos.y == y {
+		s.dir = coord{0, -1}
 	}
 	return s
 }
