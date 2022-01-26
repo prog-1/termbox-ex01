@@ -29,9 +29,7 @@ type snake struct {
 
 // newSnake returns a new struct instance representing a snake.
 func newSnake() snake {
-	for {
-		return snake{coord{5, 8}, coord{1, 0}}
-	}
+	return snake{coord{5, 8}, coord{1, 0}}
 }
 
 // Redraws the terminal.
