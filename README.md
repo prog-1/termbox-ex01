@@ -62,6 +62,10 @@ go func() {
   }
 }()
 
+// Make non-event -related logic be executed only every 100ms.
+ticker := time.NewTicker(100 * time.Millisecond)
+defer ticker.Stop()
+
 // Event loop.
 for {
   select {
@@ -75,7 +79,10 @@ for {
       // Process other key presses.
       }
     }
-  default:
+  case <-ticker.C:
+    // This block will be executed every 100ms.
+   
+  // default: // Commented out to reduce CPU load.
     // Add what to do on every step.
   }
 }
