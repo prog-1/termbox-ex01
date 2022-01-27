@@ -65,18 +65,18 @@ go func() {
 // Event loop.
 for {
   select {
-    case ev := <-eventQueue:
-      if ev.Type == termbox.EventKey {
-        switch ev.Key {
-        case termbox.KeyArrowLeft:
-          // Add what to do on Left arrow key pressed.
-        case termbox.KeyArrowRight:
-          // Add what to do on Right arrow key pressed.
-        // Process other key presses.
-        }
+  case ev := <-eventQueue:
+    if ev.Type == termbox.EventKey {
+      switch ev.Key {
+      case termbox.KeyArrowLeft:
+        // Add what to do on Left arrow key pressed.
+      case termbox.KeyArrowRight:
+        // Add what to do on Right arrow key pressed.
+      // Process other key presses.
       }
-    default:
-      // Add what to do on every step.
+    }
+  default:
+    // Add what to do on every step.
   }
 }
 ```
