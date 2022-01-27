@@ -62,7 +62,7 @@ go func() {
   }
 }()
 
-// Make non-event -related logic be executed only every 100ms.
+// Make non-event -related logic be executed every 100ms.
 ticker := time.NewTicker(100 * time.Millisecond)
 defer ticker.Stop()
 
@@ -82,8 +82,9 @@ for {
   case <-ticker.C:
     // This block will be executed every 100ms.
    
-  // default: // Commented out to reduce CPU load.
-    // Add what to do on every step.
+  // default:
+  // Use `default:` to add some logic on every loop iteration.
+  // However, this may increase the CPU load.
   }
 }
 ```
