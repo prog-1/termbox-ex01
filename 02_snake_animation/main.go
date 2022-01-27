@@ -42,38 +42,35 @@ func drawSnake(s snake) {
 }
 
 // Makes a move for a snake and returns a snake with an updated position
-// and
+
 // Makes a single iteration for a snake
+
 func stepForward(s snake) snake {
 	s.dir = coord{1, 0}
 	s.pos.x += s.dir.x
-	s.pos.y += s.dir.y
-	drawSnake(s)
 	return s
 }
 
 func stepBack(s snake) snake {
 	s.dir = coord{1, 0}
 	s.pos.x -= s.dir.x
-	s.pos.y -= s.dir.y
-	drawSnake(s)
 	return s
 }
 
 func stepUp(s snake) snake {
 	s.dir = coord{0, 1}
-	s.pos.x += s.dir.x
 	s.pos.y += s.dir.y
-	drawSnake(s)
 	return s
 }
 
 func stepDown(s snake) snake {
 	s.dir = coord{0, 1}
-	s.pos.x -= s.dir.x
 	s.pos.y -= s.dir.y
-	drawSnake(s)
 	return s
+}
+
+func sleep() {
+	time.Sleep(100 * time.Millisecond)
 }
 
 // Tasks:
@@ -90,22 +87,26 @@ func main() {
 
 	s := newSnake()
 	// This is the main event loop.
-	for { // its perfectly works even without any if statements
+	for {
 		for s.pos.x != 5 {
 			s = stepBack(s)
-			time.Sleep(100 * time.Millisecond)
+			drawSnake(s)
+			sleep()
 		}
 		for s.pos.y != 5 {
 			s = stepDown(s)
-			time.Sleep(100 * time.Millisecond)
+			drawSnake(s)
+			sleep()
 		}
 		for s.pos.x != 15 {
 			s = stepForward(s)
-			time.Sleep(100 * time.Millisecond)
+			drawSnake(s)
+			sleep()
 		}
 		for s.pos.y != 10 {
 			s = stepUp(s)
-			time.Sleep(100 * time.Millisecond)
+			drawSnake(s)
+			sleep()
 		}
 	}
 }
