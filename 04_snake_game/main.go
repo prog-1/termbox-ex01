@@ -123,6 +123,10 @@ func main() {
 			eventQueue <- termbox.PollEvent()
 		}
 	}()
+
+	ticker := time.NewTicker(70 * time.Millisecond)
+	defer ticker.Stop()
+
 	// This is the main event loop.
 	for {
 		select {
@@ -141,9 +145,8 @@ func main() {
 					return
 				}
 			}
-		default:
+		case <-ticker.C:
 			g = step(g)
-			time.Sleep(70 * time.Millisecond)
 		}
 	}
 }
