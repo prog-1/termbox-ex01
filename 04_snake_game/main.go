@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"math/rand"
 	"time"
@@ -10,6 +9,7 @@ import (
 )
 
 const (
+	apple        = 'A'
 	snakeBody    = '*'
 	snakeFgColor = termbox.ColorRed
 	// Use the default background color for the snake.
@@ -17,11 +17,11 @@ const (
 )
 
 // writeText writes a string to the buffer.
-func writeText(x, y int, s string, fg, bg termbox.Attribute) {
-	for i, ch := range s {
-		termbox.SetCell(x+i, y, ch, fg, bg)
-	}
-}
+// func writeText(x, y int, s string, fg, bg termbox.Attribute) {
+// 	for i, ch := range s {
+// 		termbox.SetCell(x+i, y, ch, fg, bg)
+// 	}
+// }
 
 // coord is a coordinate on a plane.
 type coord struct {
@@ -31,14 +31,15 @@ type coord struct {
 // snake is a struct with fields representing a snake.
 type snake struct {
 	// Position of a snake.
-	pos coord
+	body []coord
 	// Movement direction of a snake.
 	dir coord
 }
 
 // game represents a state of the game.
 type game struct {
-	sn snake
+	sn    snake
+	apple coord
 	// Game field dimensions.
 	fieldWidth, fieldHeight int
 }
@@ -49,7 +50,11 @@ type game struct {
 func newSnake(maxX, maxY int) snake {
 	// rand.Intn generates a pseudo-random number:
 	// https://pkg.go.dev/math/rand#Intn
-	return snake{coord{rand.Intn(maxX), rand.Intn(maxY)}, coord{1, 0}}
+	x, y := rand.Intn(maxX), rand.Intn(maxY)
+	return snake{
+		body: []coord{{x, y}, {x, y + 2}, {x, y}},
+		dir:  coord{},
+	}
 }
 
 // newGame returns a new game state.
@@ -57,29 +62,34 @@ func newGame() game {
 	// Sets game field dimensions to the size of the terminal.
 	w, h := termbox.Size()
 	return game{
+		sn:          newSnake(w, h),
+		apple:       coord{rand.Intn(w), rand.Intn(h)},
 		fieldWidth:  w,
 		fieldHeight: h,
-		sn:          newSnake(w, h),
 	}
 }
 
 // drawSnakePosition draws the current snake position (as a debugging
 // information) in the buffer.
-func drawSnakePosition(g game) {
-	str := fmt.Sprintf("(%d, %d)", g.sn.pos.x, g.sn.pos.y)
-	writeText(g.fieldWidth-len(str), 0, str, snakeFgColor, snakeBgColor)
-}
+// func drawSnakePosition(g game) {
+// 	str := fmt.Sprintf("(%d, %d)", g.sn.pos.x, g.sn.pos.y)
+// 	writeText(g.fieldWidth-len(str), 0, str, snakeFgColor, snakeBgColor)
+// }
 
 // drawSnake draws the snake in the buffer.
 func drawSnake(sn snake) {
-	termbox.SetCell(sn.pos.x, sn.pos.y, snakeBody, snakeFgColor, snakeBgColor)
+	for _, v := range sn.body {
+		termbox.SetCell(v.x, v.y, snakeBody, snakeFgColor, snakeBgColor)
+	}
 }
 
 // Redraws the terminal.
 func draw(g game) {
 	// Clear the old "frame".
 	termbox.Clear(snakeFgColor, snakeBgColor)
-	drawSnakePosition(g)
+	// draw apple
+	termbox.SetCell(g.apple.x, g.apple.y, apple, snakeFgColor, snakeBgColor)
+	// drawSnakePosition(g)
 	drawSnake(g.sn)
 	// Update the "frame".
 	termbox.Flush()
@@ -88,17 +98,30 @@ func draw(g game) {
 // mod is a custom implementation of the '%' (modulo) operator that always
 // returns positive numbers.
 func mod(n, m int) int {
+
 	return (n%m + m) % m
 }
 
 // Makes a move for a snake. Returns a game with an updated position.
 func moveSnake(g game) game {
-	g.sn.pos.x = mod(g.sn.pos.x+g.sn.dir.x, g.fieldWidth)
-	g.sn.pos.y = mod(g.sn.pos.y+g.sn.dir.y, g.fieldHeight)
+	for i := range g.sn.body {
+		if i != len(g.sn.body)-1 {
+			g.sn.body[i] = g.sn.body[i+1]
+		} else {
+			g.sn.body[i].x = mod(g.sn.body[i].x+g.sn.dir.x, g.fieldWidth)
+			g.sn.body[i].y = mod(g.sn.body[i].y+g.sn.dir.y, g.fieldHeight)
+		}
+	}
+
 	return g
 }
 
 func step(g game) game {
+	w, h := termbox.Size()
+	if g.apple == g.sn.body[len(g.sn.body)-1] {
+		g.apple = coord{rand.Intn(w), rand.Intn(h)}
+		g.sn.body = append([]coord{{g.sn.body[0].x, g.sn.body[0].y}}, g.sn.body...)
+	}
 	g = moveSnake(g)
 	draw(g)
 	return g
