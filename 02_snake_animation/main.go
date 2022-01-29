@@ -23,15 +23,6 @@ type coord struct {
 type snake struct {
 	// Position of a snake.
 	pos coord
-	// Movement direction of a snake.
-	dir coord
-}
-
-// newSnake returns a new struct instance representing a snake.
-func newSnake() snake {
-	// changing size of terminal, you also change size of rectangle where we can see snake
-	//  So everyone will have their own game size and snakes position depending on the size of their terminal...
-	return snake{coord{50, 6}, coord{1, 0}}
 }
 
 // Redraws the terminal.
@@ -41,36 +32,16 @@ func drawSnake(s snake) {
 	termbox.Flush()
 }
 
-// Makes a move for a snake and returns a snake with an updated position
-
-// Makes a single iteration for a snake
-
-func stepForward(s snake) snake {
-	s.dir = coord{1, 0}
-	s.pos.x += s.dir.x
-	return s
+// Makes a move for a snake and returns a snake with an updated position.
+func moveSnake(s snake, v coord) snake {
+	return snake{pos: coord{x: s.pos.x + v.x, y: s.pos.y + v.y}}
 }
 
-func stepBack(s snake) snake {
-	s.dir = coord{1, 0}
-	s.pos.x -= s.dir.x
+// Makes a single iteration for a snake.
+func step(s snake, dir coord) snake {
+	s = moveSnake(s, dir)
+	drawSnake(s)
 	return s
-}
-
-func stepUp(s snake) snake {
-	s.dir = coord{0, 1}
-	s.pos.y += s.dir.y
-	return s
-}
-
-func stepDown(s snake) snake {
-	s.dir = coord{0, 1}
-	s.pos.y -= s.dir.y
-	return s
-}
-
-func sleep() {
-	time.Sleep(100 * time.Millisecond)
 }
 
 // Tasks:
@@ -85,28 +56,10 @@ func main() {
 	}
 	defer termbox.Close()
 
-	s := newSnake()
+	s := snake{pos: coord{5, 5}}
 	// This is the main event loop.
 	for {
-		for s.pos.x != 5 {
-			s = stepBack(s)
-			drawSnake(s)
-			sleep()
-		}
-		for s.pos.y != 5 {
-			s = stepDown(s)
-			drawSnake(s)
-			sleep()
-		}
-		for s.pos.x != 15 {
-			s = stepForward(s)
-			drawSnake(s)
-			sleep()
-		}
-		for s.pos.y != 10 {
-			s = stepUp(s)
-			drawSnake(s)
-			sleep()
-		}
+		s = step(s, coord{1, 0})
+		time.Sleep(100 * time.Millisecond)
 	}
 }

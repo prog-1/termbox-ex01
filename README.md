@@ -62,21 +62,29 @@ go func() {
   }
 }()
 
+// Make non-event -related logic be executed every 100ms.
+ticker := time.NewTicker(100 * time.Millisecond)
+defer ticker.Stop()
+
 // Event loop.
 for {
   select {
-    case ev := <-eventQueue:
-      if ev.Type == termbox.EventKey {
-        switch ev.Key {
-        case termbox.KeyArrowLeft:
-          // Add what to do on Left arrow key pressed.
-        case termbox.KeyArrowRight:
-          // Add what to do on Right arrow key pressed.
-        // Process other key presses.
-        }
+  case ev := <-eventQueue:
+    if ev.Type == termbox.EventKey {
+      switch ev.Key {
+      case termbox.KeyArrowLeft:
+        // Add what to do on Left arrow key pressed.
+      case termbox.KeyArrowRight:
+        // Add what to do on Right arrow key pressed.
+      // Process other key presses.
       }
-    default:
-      // Add what to do on every step.
+    }
+  case <-ticker.C:
+    // This block will be executed every 100ms.
+   
+  // default:
+  // Use `default:` to add some logic on every loop iteration.
+  // However, this may increase the CPU load.
   }
 }
 ```
