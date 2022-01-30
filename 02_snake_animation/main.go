@@ -23,14 +23,6 @@ type coord struct {
 type snake struct {
 	// Position of a snake.
 	pos coord
-	// Movement direction of a snake.
-	dir coord
-}
-
-// newSnake returns a new struct instance representing a snake.
-func newSnake() snake {
-	return snake{coord{0, 0}, coord{1, 0}}
-
 }
 
 // Redraws the terminal.
@@ -41,34 +33,13 @@ func drawSnake(s snake) {
 }
 
 // Makes a move for a snake and returns a snake with an updated position.
-func moveSnake(s snake) snake {
-	s.pos.x += s.dir.x
-	s.pos.y += s.dir.y
-	return s
+func moveSnake(s snake, v coord) snake {
+	return snake{pos: coord{x: s.pos.x + v.x, y: s.pos.y + v.y}}
 }
 
-func step(s snake) snake {
-	a := coord{0, 0}
-	b := coord{10, 0}
-	c := coord{10, 10}
-	d := coord{0, 10}
-	switch s.pos {
-	case a:
-		s.dir.x = 1
-		s.dir.y = 0
-	case b:
-		s.dir.x = 0
-		s.dir.y = 1
-	case c:
-		s.dir.x = -1
-		s.dir.y = 0
-	case d:
-		s.dir.x = 0
-		s.dir.y = -1
-
-	}
-
-	s = moveSnake(s)
+// Makes a single iteration for a snake.
+func step(s snake, dir coord) snake {
+	s = moveSnake(s, dir)
 	drawSnake(s)
 	return s
 }
@@ -85,10 +56,10 @@ func main() {
 	}
 	defer termbox.Close()
 
-	s := newSnake()
+	s := snake{pos: coord{5, 5}}
 	// This is the main event loop.
 	for {
-		s = step(s)
+		s = step(s, coord{1, 0})
 		time.Sleep(100 * time.Millisecond)
 	}
 }
