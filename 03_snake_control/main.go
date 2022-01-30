@@ -22,13 +22,6 @@ type coord struct {
 type snake struct {
 	// Position of a snake.
 	pos coord
-	// Movement direction of a snake.
-	dir coord
-}
-
-// newSnake returns a new struct instance representing a snake.
-func newSnake() snake {
-	return snake{coord{5, 5}, coord{1, 0}}
 }
 
 // Redraws the terminal.
@@ -39,10 +32,8 @@ func drawSnake(s snake) {
 }
 
 // Makes a move for a snake and returns a snake with an updated position.
-func moveSnake(s snake) snake {
-	s.pos.x += s.dir.x
-	s.pos.y += s.dir.y
-	return s
+func moveSnake(s snake, v coord) snake {
+	return snake{pos: coord{x: s.pos.x + v.x, y: s.pos.y + v.y}}
 }
 
 // Tasks:
@@ -56,7 +47,9 @@ func main() {
 	}
 	defer termbox.Close()
 
-	s := newSnake()
+	s := snake{pos: coord{5, 5}}
+	v := coord{1, 0}
+
 	// This is the main event loop.
 	for {
 		drawSnake(s)
@@ -73,11 +66,11 @@ func main() {
 			// }
 			switch ev.Key {
 			case termbox.KeyArrowLeft:
-				s.dir = coord{-1, 0}
-				s = moveSnake(s)
+				v = coord{-1, 0}
+				s = moveSnake(s, v)
 			case termbox.KeyArrowRight:
-				s.dir = coord{1, 0}
-				s = moveSnake(s)
+				v = coord{1, 0}
+				s = moveSnake(s, v)
 			// The program exits when a user presses 'Esc'.
 			case termbox.KeyEsc:
 				return
