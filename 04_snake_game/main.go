@@ -10,10 +10,14 @@ import (
 )
 
 const (
-	snakeBody    = '*'
-	snakeFgColor = termbox.ColorRed
+	snakeBody    = 'S'
+	snakeFgColor = termbox.ColorGreen
 	// Use the default background color for the snake.
 	snakeBgColor = termbox.ColorDefault
+	appleIcon    = '0'
+	appleFgColor = termbox.ColorRed
+	appleBgColor = termbox.ColorDefault
+	borderColor  = termbox.ColorBlue
 )
 
 // writeText writes a string to the buffer.
@@ -34,9 +38,15 @@ type snake struct {
 	pos coord
 }
 
+type apple struct {
+	// Position of an apple.
+	po coord
+}
+
 // game represents a state of the game.
 type game struct {
 	sn snake
+	ap apple
 	v  coord
 	// Game field dimensions.
 	fieldWidth, fieldHeight int
@@ -51,6 +61,12 @@ func newSnake(maxX, maxY int) snake {
 	return snake{coord{rand.Intn(maxX), rand.Intn(maxY)}}
 }
 
+func newApple(maxX, maxY int) apple {
+	// rand.Intn generates a pseudo-random number:
+	// https://pkg.go.dev/math/rand#Intn
+	return apple{coord{rand.Intn(maxX), rand.Intn(maxY)}}
+}
+
 // newGame returns a new game state.
 func newGame() game {
 	// Sets game field dimensions to the size of the terminal.
@@ -59,6 +75,7 @@ func newGame() game {
 		fieldWidth:  w,
 		fieldHeight: h,
 		sn:          newSnake(w, h),
+		ap:          newApple(w, h),
 		v:           coord{1, 0},
 	}
 }
@@ -70,9 +87,33 @@ func drawSnakePosition(g game) {
 	writeText(g.fieldWidth-len(str), 0, str, snakeFgColor, snakeBgColor)
 }
 
+func drawApplePosition(g game) {
+	str := fmt.Sprintf("(%d, %d)", g.ap.po.x, g.ap.po.y)
+	writeText(g.fieldWidth-len(str), 0, str, appleFgColor, appleBgColor)
+}
+
 // drawSnake draws the snake in the buffer.
 func drawSnake(sn snake) {
 	termbox.SetCell(sn.pos.x, sn.pos.y, snakeBody, snakeFgColor, snakeBgColor)
+}
+
+func drawApple(ap apple) {
+	termbox.SetCell(ap.po.x, ap.po.y, appleIcon, appleFgColor, appleBgColor)
+}
+
+func drawBorder(width, height int) {
+	for i := 0; i <= width; i++ {
+		termbox.SetBg(i, 0, borderColor)
+	}
+	for i := 0; i <= height; i++ {
+		termbox.SetBg(width-1, i, borderColor)
+	}
+	for i := 0; i <= width; i++ {
+		termbox.SetBg(i, height-1, borderColor)
+	}
+	for i := 0; i <= height; i++ {
+		termbox.SetBg(0, i, borderColor)
+	}
 }
 
 // Redraws the terminal.
@@ -81,6 +122,11 @@ func draw(g game) {
 	termbox.Clear(snakeFgColor, snakeBgColor)
 	drawSnakePosition(g)
 	drawSnake(g.sn)
+	// termbox.Clear(appleFgColor, appleBgColor)
+	drawApplePosition(g)
+	drawApple(g.ap)
+	drawCount(g)
+	drawBorder(g.fieldWidth, g.fieldHeight)
 	// Update the "frame".
 	termbox.Flush()
 }
@@ -98,7 +144,27 @@ func moveSnake(s snake, v coord, fw, fh int) snake {
 	return s
 }
 
+func appleCount(g game) int {
+	w, h := termbox.Size()
+	count := 0
+	for g.sn.pos.x == g.ap.po.x && g.sn.pos.y == g.ap.po.y {
+		g.ap = newApple(w, h)
+		count++
+
+	}
+	return count
+}
+
+func drawCount(g game) {
+	c := appleCount(g)
+	writeText(g.fieldWidth/2, 0, fmt.Sprint("Points:", c), termbox.ColorWhite|termbox.AttrBold, termbox.ColorDefault)
+}
+
 func step(g game) game {
+	w, h := termbox.Size()
+	if g.sn.pos.x == g.ap.po.x && g.sn.pos.y == g.ap.po.y {
+		g.ap = newApple(w, h)
+	}
 	g.sn = moveSnake(g.sn, g.v, g.fieldWidth, g.fieldHeight)
 	draw(g)
 	return g
@@ -121,7 +187,6 @@ func main() {
 	// Other initialization.
 	rand.Seed(time.Now().UnixNano())
 	g := newGame()
-
 	eventQueue := make(chan termbox.Event)
 	go func() {
 		for {
@@ -129,7 +194,7 @@ func main() {
 		}
 	}()
 
-	ticker := time.NewTicker(70 * time.Millisecond)
+	ticker := time.NewTicker(150 * time.Millisecond)
 	defer ticker.Stop()
 
 	// This is the main event loop.
