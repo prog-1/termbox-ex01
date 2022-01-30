@@ -41,17 +41,25 @@ func drawSnake(s snake) {
 
 // Makes a move for a snake and returns a snake with an updated position.
 func moveSnake(s snake) snake {
+	s.pos.x += s.dir.x
 	s.pos.y += s.dir.y
-	if s.pos.x == 5 && s.pos.y == 7 {
-		s.dir.x, s.dir.y = 0, 1
-	} else if s.pos.x == 5 && s.pos.y == 10 {
-		s.dir.x, s.dir.y = 0, -1
-	}
 	return s
 }
 
 // Makes a single iteration for a snake.
 func step(s snake) snake {
+	for _, pivot := range []struct {
+		pos, dir coord
+	}{
+		{coord{5, 7}, coord{0, 1}},
+		{coord{5, 10}, coord{-1, 0}},
+		{coord{1, 10}, coord{0, -1}},
+		{coord{1, 7}, coord{1, 0}},
+	} {
+		if (coord{s.pos.x, s.pos.y} == pivot.pos) {
+			s.dir = pivot.dir
+		}
+	}
 	s = moveSnake(s)
 	drawSnake(s)
 	return s
