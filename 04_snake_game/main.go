@@ -13,10 +13,13 @@ const (
 	snakeBody    = '&'
 	snakeFgColor = termbox.ColorRed
 	// Use the default background color for the snake.
-	snakeBgColor = termbox.ColorDefault
-	appleBody    = 'O'
-	appleFgColor = termbox.ColorLightGreen
-	appleBgColor = termbox.ColorDefault
+	snakeBgColor  = termbox.ColorDefault
+	appleBody     = 'O'
+	appleFgColor  = termbox.ColorLightGreen
+	appleBgColor  = termbox.ColorDefault
+	borderBody    = '-'
+	borderFgColor = termbox.ColorLightGray
+	borderBgColor = termbox.ColorBlack
 )
 
 // writeText writes a string to the buffer.
@@ -138,6 +141,29 @@ func moveLeft(g game) game  { g.v = coord{-1, 0}; return g }
 func moveRight(g game) game { g.v = coord{1, 0}; return g }
 func moveUp(g game) game    { g.v = coord{0, -1}; return g }
 func moveDown(g game) game  { g.v = coord{0, 1}; return g }
+
+type border struct {
+	width, height int
+	coords        map[coord]int
+}
+
+func drawborder() {
+	b := new(border)
+	w, h := termbox.Size()
+	b.width, b.height = w-1, h-1
+	b.coords = make(map[coord]int)
+
+	for x := 0; x < b.width; x++ {
+		b.coords[coord{x, 0}] = 1
+		b.coords[coord{x, b.height}] = 1
+	}
+	for y := 0; y < b.height+1; y++ {
+		b.coords[coord{0, y}] = 1
+		b.coords[coord{b.width, y}] = 1
+	}
+
+	return
+}
 
 // Tasks:
 func main() {
