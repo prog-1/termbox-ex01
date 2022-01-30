@@ -142,6 +142,8 @@ func moveRight(g game) game { g.v = coord{1, 0}; return g }
 func moveUp(g game) game    { g.v = coord{0, -1}; return g }
 func moveDown(g game) game  { g.v = coord{0, 1}; return g }
 
+//Hint for func border: https://github.com/mattkelly/snake-go/blob/master/border.go
+
 type border struct {
 	width, height int
 	coords        map[coord]int
