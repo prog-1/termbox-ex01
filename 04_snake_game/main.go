@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	snakeBody    = '*'
+	snakeBody    = '='
 	snakeFgColor = termbox.ColorRed
 	// Use the default background color for the snake.
 	snakeBgColor = termbox.ColorDefault
