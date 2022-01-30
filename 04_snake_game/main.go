@@ -50,6 +50,7 @@ type game struct {
 	v  coord
 	// Game field dimensions.
 	fieldWidth, fieldHeight int
+	count                   int
 }
 
 // newSnake returns a new struct instance representing a snake.
@@ -62,8 +63,6 @@ func newSnake(maxX, maxY int) snake {
 }
 
 func newApple(maxX, maxY int) apple {
-	// rand.Intn generates a pseudo-random number:
-	// https://pkg.go.dev/math/rand#Intn
 	return apple{coord{rand.Intn(maxX), rand.Intn(maxY)}}
 }
 
@@ -89,7 +88,7 @@ func drawSnakePosition(g game) {
 
 func drawApplePosition(g game) {
 	str := fmt.Sprintf("(%d, %d)", g.ap.po.x, g.ap.po.y)
-	writeText(g.fieldWidth-len(str), 0, str, appleFgColor, appleBgColor)
+	writeText(g.fieldWidth, 0, str, appleFgColor, appleBgColor)
 }
 
 // drawSnake draws the snake in the buffer.
@@ -144,30 +143,19 @@ func moveSnake(s snake, v coord, fw, fh int) snake {
 	return s
 }
 
-func appleCount(g game) int {
-	w, h := termbox.Size()
-	count := 0
-	for g.sn.pos.x == g.ap.po.x && g.sn.pos.y == g.ap.po.y {
-		g.ap = newApple(w, h)
-		count++
-
-	}
-	return count
-}
-
-func drawCount(g game) {
-	c := appleCount(g)
-	writeText(g.fieldWidth/2, 0, fmt.Sprint("Points:", c), termbox.ColorWhite|termbox.AttrBold, termbox.ColorDefault)
-}
-
 func step(g game) game {
 	w, h := termbox.Size()
 	if g.sn.pos.x == g.ap.po.x && g.sn.pos.y == g.ap.po.y {
 		g.ap = newApple(w, h)
+		g.count++
 	}
 	g.sn = moveSnake(g.sn, g.v, g.fieldWidth, g.fieldHeight)
 	draw(g)
 	return g
+}
+
+func drawCount(g game) {
+	writeText(g.fieldWidth/2, 0, fmt.Sprint("Points:", g.count), termbox.ColorWhite|termbox.AttrBold, termbox.ColorDefault)
 }
 
 func moveLeft(g game) game  { g.v = coord{-1, 0}; return g }
@@ -187,6 +175,7 @@ func main() {
 	// Other initialization.
 	rand.Seed(time.Now().UnixNano())
 	g := newGame()
+
 	eventQueue := make(chan termbox.Event)
 	go func() {
 		for {
