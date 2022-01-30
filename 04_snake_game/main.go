@@ -13,10 +13,13 @@ const (
 	snakeBody    = '&'
 	snakeFgColor = termbox.ColorRed
 	// Use the default background color for the snake.
-	snakeBgColor = termbox.ColorDefault
-	appleBody    = 'O'
-	appleFgColor = termbox.ColorLightGreen
-	appleBgColor = termbox.ColorDefault
+	snakeBgColor  = termbox.ColorDefault
+	appleBody     = 'O'
+	appleFgColor  = termbox.ColorLightGreen
+	appleBgColor  = termbox.ColorDefault
+	borderBody    = '-'
+	borderFgColor = termbox.ColorLightGray
+	borderBgColor = termbox.ColorBlack
 )
 
 // writeText writes a string to the buffer.
