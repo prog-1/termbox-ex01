@@ -11,9 +11,15 @@ import (
 
 const (
 	snakeBody    = '*'
-	snakeFgColor = termbox.ColorRed
+	snakeFgColor = termbox.ColorGreen
 	// Use the default background color for the snake.
-	snakeBgColor = termbox.ColorDefault
+	snakeBgColor  = termbox.ColorDefault
+	appleBody     = 'O'
+	appleFgColor  = termbox.ColorRed
+	appleBgColor  = termbox.ColorDefault
+	borderBody    = '#'
+	borderFgColor = termbox.ColorWhite
+	borderBgColor = termbox.ColorDefault
 )
 
 // writeText writes a string to the buffer.
@@ -27,6 +33,9 @@ func writeText(x, y int, s string, fg, bg termbox.Attribute) {
 type coord struct {
 	x, y int
 }
+type apple struct {
+	pos coord
+}
 
 // snake is a struct with fields representing a snake.
 type snake struct {
@@ -36,10 +45,14 @@ type snake struct {
 
 // game represents a state of the game.
 type game struct {
-	sn snake
-	v  coord
-	// Game field dimensions.
+	sn                      snake
+	v                       coord
+	ap                      apple
 	fieldWidth, fieldHeight int
+}
+
+func newAplle(maxX, maxY int) apple {
+	return apple{coord{rand.Intn(maxX), rand.Intn(maxY)}}
 }
 
 // newSnake returns a new struct instance representing a snake.
@@ -60,6 +73,7 @@ func newGame() game {
 		fieldHeight: h,
 		sn:          newSnake(w, h),
 		v:           coord{1, 0},
+		ap:          newAplle(w, h),
 	}
 }
 
@@ -69,18 +83,62 @@ func drawSnakePosition(g game) {
 	str := fmt.Sprintf("(%d, %d)", g.sn.pos.x, g.sn.pos.y)
 	writeText(g.fieldWidth-len(str), 0, str, snakeFgColor, snakeBgColor)
 }
+func drawApllePosition(g game) {
+	str := fmt.Sprintf("(%d, %d)", g.ap.pos.x, g.ap.pos.y)
+	writeText(g.fieldWidth-len(str), 0, str, appleFgColor, appleBgColor)
+}
 
 // drawSnake draws the snake in the buffer.
 func drawSnake(sn snake) {
 	termbox.SetCell(sn.pos.x, sn.pos.y, snakeBody, snakeFgColor, snakeBgColor)
 }
+func drawApple(ap apple) {
+	termbox.SetCell(ap.pos.x, ap.pos.y, appleBody, appleFgColor, appleBgColor)
+}
+func drawborder() {
+	w, h := termbox.Size()
+	for i := 0; i < w-1; i++ {
+		termbox.SetCell(i, 0, borderBody, borderFgColor, borderBgColor)
+		termbox.SetCell(i, h-1, borderBody, borderFgColor, borderBgColor)
+	}
+	for i := 0; i < h-1; i++ {
+		termbox.SetCell(0, i, borderBody, borderFgColor, borderBgColor)
+		termbox.SetCell(w-1, i, borderBody, borderFgColor, borderBgColor)
+	}
+	termbox.Flush()
+}
 
+// func NewArena(w, h int) *Arena {
+// 	arena := new(Arena)
+// 	// Width and height of the arena are decresed by one to add corners on the arena border.
+// 	arena.Width = w - 1
+// 	arena.Height = h - 1
+// 	// Each arena cell will have a width and heigth of 1.
+// 	arena.Entity = tl.NewEntity(1, 1, 1, 1)
+// 	// Creates a map of coordinates.
+// 	arena.ArenaBorder = make(map[coord]int)
+
+// 	// This for loop will create the top and bottom borders
+// 	for x := 0; x < arena.Width; x++ {
+// 		arena.ArenaBorder[coord{x, 0}] = 1
+// 		arena.ArenaBorder[coord{x, arena.Height}] = 1
+// 	}
+
+// 	// This for loop will create the left and right borders
+// 	for y := 0; y < arena.Height+1; y++ {
+// 		arena.ArenaBorder[coord{0, y}] = 1
+// 		arena.ArenaBorder[coord{arena.Width, y}] = 1
+// 	}
+// 	return arena
+// }
 // Redraws the terminal.
 func draw(g game) {
 	// Clear the old "frame".
 	termbox.Clear(snakeFgColor, snakeBgColor)
 	drawSnakePosition(g)
 	drawSnake(g.sn)
+	drawApllePosition(g)
+	drawApple(g.ap)
 	// Update the "frame".
 	termbox.Flush()
 }
@@ -108,6 +166,13 @@ func moveLeft(g game) game  { g.v = coord{-1, 0}; return g }
 func moveRight(g game) game { g.v = coord{1, 0}; return g }
 func moveUp(g game) game    { g.v = coord{0, -1}; return g }
 func moveDown(g game) game  { g.v = coord{0, 1}; return g }
+func aplleEaten(g game) apple {
+	w, h := termbox.Size()
+	if g.ap.pos.x == g.sn.pos.x && g.ap.pos.y == g.sn.pos.y {
+		g.ap = newAplle(w, h)
+	}
+	return g.ap
+}
 
 // Tasks:
 func main() {
@@ -131,9 +196,11 @@ func main() {
 
 	ticker := time.NewTicker(70 * time.Millisecond)
 	defer ticker.Stop()
+	drawborder()
 
 	// This is the main event loop.
 	for {
+
 		select {
 		case ev := <-eventQueue:
 			if ev.Type == termbox.EventKey {
@@ -153,5 +220,7 @@ func main() {
 		case <-ticker.C:
 			g = step(g)
 		}
+		g.ap = aplleEaten(g)
+
 	}
 }
