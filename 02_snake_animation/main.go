@@ -63,3 +63,21 @@ func main() {
 		time.Sleep(100 * time.Millisecond)
 	}
 }
+
+func step(s snake) snake {
+	for _, pivot := range []struct {
+		pos, dir coord
+	}{
+		{coord{30, 3}, coord{0, 1}},
+		{coord{30, 10}, coord{-1, 0}},
+		{coord{3, 10}, coord{0, -1}},
+		{coord{3, 3}, coord{1, 0}},
+	} {
+		if (coord{x, y} == pivot.pos) {
+			s.dir = pivot.dir
+		}
+	}
+	s = moveSnake(s)
+	drawSnake(s)
+	return s
+}
