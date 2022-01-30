@@ -95,6 +95,7 @@ func drawSnake(sn snake) {
 func drawApple(ap apple) {
 	termbox.SetCell(ap.pos.x, ap.pos.y, appleBody, appleFgColor, appleBgColor)
 }
+
 func drawborder() {
 	w, h := termbox.Size()
 	for i := 0; i < w-1; i++ {
@@ -105,32 +106,16 @@ func drawborder() {
 		termbox.SetCell(0, i, borderBody, borderFgColor, borderBgColor)
 		termbox.SetCell(w-1, i, borderBody, borderFgColor, borderBgColor)
 	}
-	termbox.Flush()
+
 }
 
-// func NewArena(w, h int) *Arena {
-// 	arena := new(Arena)
-// 	// Width and height of the arena are decresed by one to add corners on the arena border.
-// 	arena.Width = w - 1
-// 	arena.Height = h - 1
-// 	// Each arena cell will have a width and heigth of 1.
-// 	arena.Entity = tl.NewEntity(1, 1, 1, 1)
-// 	// Creates a map of coordinates.
-// 	arena.ArenaBorder = make(map[coord]int)
+func borderCrash(g game) bool {
+	if g.sn.pos.x == 0 || g.sn.pos.y == 0 || g.sn.pos.x == g.fieldWidth-1 || g.sn.pos.y == g.fieldHeight-1 {
+		return true
+	}
+	return false
+}
 
-// 	// This for loop will create the top and bottom borders
-// 	for x := 0; x < arena.Width; x++ {
-// 		arena.ArenaBorder[coord{x, 0}] = 1
-// 		arena.ArenaBorder[coord{x, arena.Height}] = 1
-// 	}
-
-// 	// This for loop will create the left and right borders
-// 	for y := 0; y < arena.Height+1; y++ {
-// 		arena.ArenaBorder[coord{0, y}] = 1
-// 		arena.ArenaBorder[coord{arena.Width, y}] = 1
-// 	}
-// 	return arena
-// }
 // Redraws the terminal.
 func draw(g game) {
 	// Clear the old "frame".
@@ -196,15 +181,16 @@ func main() {
 
 	ticker := time.NewTicker(70 * time.Millisecond)
 	defer ticker.Stop()
-	drawborder()
 
 	// This is the main event loop.
 	for {
-
+		drawborder()
+		termbox.Flush()
 		select {
 		case ev := <-eventQueue:
 			if ev.Type == termbox.EventKey {
 				switch ev.Key {
+
 				case termbox.KeyArrowDown:
 					g = moveDown(g)
 				case termbox.KeyArrowUp:
@@ -218,9 +204,16 @@ func main() {
 				}
 			}
 		case <-ticker.C:
-			g = step(g)
-		}
-		g.ap = aplleEaten(g)
+			if borderCrash(g) {
+				fmt.Println("GAME OVER")
+				termbox.Flush()
+				time.Sleep(10 * time.Second)
+				return
 
+			}
+			g = step(g)
+			g.ap = aplleEaten(g)
+
+		}
 	}
 }
