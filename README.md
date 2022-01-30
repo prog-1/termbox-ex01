@@ -62,28 +62,44 @@ go func() {
   }
 }()
 
+// Make non-event -related logic be executed every 100ms.
+ticker := time.NewTicker(100 * time.Millisecond)
+defer ticker.Stop()
+
 // Event loop.
 for {
   select {
-    case ev := <-eventQueue:
-      if ev.Type == termbox.EventKey {
-        switch ev.Key {
-        case termbox.KeyArrowLeft:
-          // Add what to do on Left arrow key pressed.
-        case termbox.KeyArrowRight:
-          // Add what to do on Right arrow key pressed.
-        // Process other key presses.
-        }
+  case ev := <-eventQueue:
+    if ev.Type == termbox.EventKey {
+      switch ev.Key {
+      case termbox.KeyArrowLeft:
+        // Add what to do on Left arrow key pressed.
+      case termbox.KeyArrowRight:
+        // Add what to do on Right arrow key pressed.
+      // Process other key presses.
       }
-    default:
-      // Add what to do on every step.
+    }
+  case <-ticker.C:
+    // This block will be executed every 100ms.
+   
+  // default:
+  // Use `default:` to add some logic on every loop iteration.
+  // However, this may increase the CPU load.
   }
 }
 ```
 
 # Exercises
 
-All exercises must be completed by modifying `04_snake_game` program.
+## Exercises 1
+
+Modify `02_snake_animation` so the snake moves along the sides of a rectangle.
+
+![demo](snake_demo_01.gif)
+
+## Exercises 2
+
+All exercises here must be completed by modifying `04_snake_game` program.
 
 1. Draw the field borders (walls).
 2. Collisions (alternatives):

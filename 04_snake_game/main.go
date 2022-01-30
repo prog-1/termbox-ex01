@@ -32,13 +32,12 @@ type coord struct {
 type snake struct {
 	// Position of a snake.
 	pos coord
-	// Movement direction of a snake.
-	dir coord
 }
 
 // game represents a state of the game.
 type game struct {
 	sn snake
+	v  coord
 	// Game field dimensions.
 	fieldWidth, fieldHeight int
 }
@@ -49,7 +48,7 @@ type game struct {
 func newSnake(maxX, maxY int) snake {
 	// rand.Intn generates a pseudo-random number:
 	// https://pkg.go.dev/math/rand#Intn
-	return snake{coord{rand.Intn(maxX), rand.Intn(maxY)}, coord{1, 0}}
+	return snake{coord{rand.Intn(maxX), rand.Intn(maxY)}}
 }
 
 // newGame returns a new game state.
@@ -60,6 +59,7 @@ func newGame() game {
 		fieldWidth:  w,
 		fieldHeight: h,
 		sn:          newSnake(w, h),
+		v:           coord{1, 0},
 	}
 }
 
@@ -91,18 +91,23 @@ func mod(n, m int) int {
 	return (n%m + m) % m
 }
 
-// Makes a move for a snake. Returns a game with an updated position.
-func moveSnake(g game) game {
-	g.sn.pos.x = mod(g.sn.pos.x+g.sn.dir.x, g.fieldWidth)
-	g.sn.pos.y = mod(g.sn.pos.y+g.sn.dir.y, g.fieldHeight)
-	return g
+// Makes a move for a snake. Returns a snake with an updated position.
+func moveSnake(s snake, v coord, fw, fh int) snake {
+	s.pos.x = mod(s.pos.x+v.x, fw)
+	s.pos.y = mod(s.pos.y+v.y, fh)
+	return s
 }
 
 func step(g game) game {
-	g = moveSnake(g)
+	g.sn = moveSnake(g.sn, g.v, g.fieldWidth, g.fieldHeight)
 	draw(g)
 	return g
 }
+
+func moveLeft(g game) game  { g.v = coord{-1, 0}; return g }
+func moveRight(g game) game { g.v = coord{1, 0}; return g }
+func moveUp(g game) game    { g.v = coord{0, -1}; return g }
+func moveDown(g game) game  { g.v = coord{0, 1}; return g }
 
 // Tasks:
 func main() {
@@ -123,6 +128,10 @@ func main() {
 			eventQueue <- termbox.PollEvent()
 		}
 	}()
+
+	ticker := time.NewTicker(70 * time.Millisecond)
+	defer ticker.Stop()
+
 	// This is the main event loop.
 	for {
 		select {
@@ -130,20 +139,19 @@ func main() {
 			if ev.Type == termbox.EventKey {
 				switch ev.Key {
 				case termbox.KeyArrowDown:
-					g.sn.dir = coord{0, 1}
+					g = moveDown(g)
 				case termbox.KeyArrowUp:
-					g.sn.dir = coord{0, -1}
+					g = moveUp(g)
 				case termbox.KeyArrowLeft:
-					g.sn.dir = coord{-1, 0}
+					g = moveLeft(g)
 				case termbox.KeyArrowRight:
-					g.sn.dir = coord{1, 0}
+					g = moveRight(g)
 				case termbox.KeyEsc:
 					return
 				}
 			}
-		default:
+		case <-ticker.C:
 			g = step(g)
-			time.Sleep(70 * time.Millisecond)
 		}
 	}
 }
