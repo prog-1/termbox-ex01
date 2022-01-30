@@ -10,10 +10,13 @@ import (
 )
 
 const (
-	snakeBody    = 'O'
+	snakeBody    = '&'
 	snakeFgColor = termbox.ColorRed
 	// Use the default background color for the snake.
 	snakeBgColor = termbox.ColorDefault
+	appleBody    = 'O'
+	appleFgColor = termbox.ColorLightGreen
+	appleBgColor = termbox.ColorDefault
 )
 
 // writeText writes a string to the buffer.
@@ -36,11 +39,20 @@ type snake struct {
 	dir coord
 }
 
+type applePos struct {
+	pos coord
+}
+
 // game represents a state of the game.
 type game struct {
-	sn snake
+	sn    snake
+	apple applePos
 	// Game field dimensions.
 	fieldWidth, fieldHeight int
+}
+
+func newApple(maxX, maxY int) applePos {
+	return applePos{coord{rand.Intn(maxX), rand.Intn(maxY)}}
 }
 
 // newSnake returns a new struct instance representing a snake.
@@ -60,6 +72,7 @@ func newGame() game {
 		fieldWidth:  w,
 		fieldHeight: h,
 		sn:          newSnake(w, h),
+		apple:       newApple(w, h),
 	}
 }
 
@@ -69,10 +82,18 @@ func drawSnakePosition(g game) {
 	str := fmt.Sprintf("(%d, %d)", g.sn.pos.x, g.sn.pos.y)
 	writeText(g.fieldWidth-len(str), 0, str, snakeFgColor, snakeBgColor)
 }
+func drawApllePosition(g game) {
+	str := fmt.Sprintf("(%d, %d)", g.apple.pos.x, g.apple.pos.y)
+	writeText(g.fieldWidth-len(str), 0, str, appleFgColor, appleBgColor)
+}
 
 // drawSnake draws the snake in the buffer.
 func drawSnake(sn snake) {
 	termbox.SetCell(sn.pos.x, sn.pos.y, snakeBody, snakeFgColor, snakeBgColor)
+}
+
+func drawApple(apple applePos) {
+	termbox.SetCell(apple.pos.x, apple.pos.y, appleBody, appleFgColor, appleBgColor)
 }
 
 // Redraws the terminal.
@@ -81,6 +102,8 @@ func draw(g game) {
 	termbox.Clear(snakeFgColor, snakeBgColor)
 	drawSnakePosition(g)
 	drawSnake(g.sn)
+	drawApllePosition(g)
+	drawApple(g.apple)
 	// Update the "frame".
 	termbox.Flush()
 }
@@ -102,6 +125,13 @@ func step(g game) game {
 	g = moveSnake(g)
 	draw(g)
 	return g
+}
+func aplleEaten(g game) applePos {
+	w, h := termbox.Size()
+	if g.apple.pos.x == g.sn.pos.x && g.apple.pos.y == g.sn.pos.y {
+		g.apple = newApple(w, h)
+	}
+	return g.apple
 }
 
 // Tasks:
@@ -145,5 +175,6 @@ func main() {
 			g = step(g)
 			time.Sleep(70 * time.Millisecond)
 		}
+		g.apple = aplleEaten(g)
 	}
 }
