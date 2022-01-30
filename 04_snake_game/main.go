@@ -20,6 +20,9 @@ const (
 	borderBody    = '-'
 	borderFgColor = termbox.ColorLightGray
 	borderBgColor = termbox.ColorBlack
+	energyBody    = 'E' // idea: if snake eats E, tail should become x2 longer
+	energyFgColor = termbox.ColorBlue
+	energyBgColor = termbox.ColorDefault
 )
 
 // writeText writes a string to the buffer.
@@ -44,17 +47,26 @@ type applePos struct {
 	pos coord
 }
 
+type eee struct {
+	pos coord
+}
+
 // game represents a state of the game.
 type game struct {
 	sn    snake
 	v     coord
 	apple applePos
+	e     eee
 	// Game field dimensions.
 	fieldWidth, fieldHeight int
 }
 
 func newApple(maxX, maxY int) applePos {
 	return applePos{coord{rand.Intn(maxX), rand.Intn(maxY)}}
+}
+
+func newEnergy(maxX, maxY int) eee {
+	return eee{coord{rand.Intn(maxX), rand.Intn(maxY)}}
 }
 
 // newSnake returns a new struct instance representing a snake.
@@ -76,6 +88,7 @@ func newGame() game {
 		sn:          newSnake(w, h),
 		v:           coord{1, 0},
 		apple:       newApple(w, h),
+		e:           newEnergy(w, h),
 	}
 }
 
@@ -90,6 +103,11 @@ func drawApllePosition(g game) {
 	writeText(g.fieldWidth-len(str), 0, str, appleFgColor, appleBgColor)
 }
 
+func drawEnergyPosition(g game) {
+	str := fmt.Sprintf("(%d, %d)", g.apple.pos.x, g.apple.pos.y)
+	writeText(g.fieldWidth-len(str), 0, str, appleFgColor, appleBgColor)
+}
+
 // drawSnake draws the snake in the buffer.
 func drawSnake(sn snake) {
 	termbox.SetCell(sn.pos.x, sn.pos.y, snakeBody, snakeFgColor, snakeBgColor)
@@ -97,6 +115,10 @@ func drawSnake(sn snake) {
 
 func drawApple(apple applePos) {
 	termbox.SetCell(apple.pos.x, apple.pos.y, appleBody, appleFgColor, appleBgColor)
+}
+
+func drawE(e eee) {
+	termbox.SetCell(e.pos.x, e.pos.y, energyBody, energyFgColor, energyBgColor)
 }
 
 // Redraws the terminal.
@@ -107,6 +129,8 @@ func draw(g game) {
 	drawSnake(g.sn)
 	drawApllePosition(g)
 	drawApple(g.apple)
+	drawEnergyPosition(g)
+	drawE(g.e)
 	// Update the "frame".
 	termbox.Flush()
 }
@@ -129,12 +153,21 @@ func step(g game) game {
 	draw(g)
 	return g
 }
+
 func aplleEaten(g game) applePos {
 	w, h := termbox.Size()
 	if g.apple.pos.x == g.sn.pos.x && g.apple.pos.y == g.sn.pos.y {
 		g.apple = newApple(w, h)
 	}
 	return g.apple
+}
+
+func eEaten(g game) eee {
+	w, h := termbox.Size()
+	if g.e.pos.x == g.sn.pos.x && g.e.pos.y == g.sn.pos.y {
+		g.e = newEnergy(w, h)
+	}
+	return g.e
 }
 
 func moveLeft(g game) game  { g.v = coord{-1, 0}; return g }
@@ -165,6 +198,12 @@ func drawborder() {
 	}
 
 	return
+}
+func borderCrash(g game) bool {
+	if g.sn.pos.x == 0 || g.sn.pos.y == 0 || g.sn.pos.x == g.fieldWidth-1 || g.sn.pos.y == g.fieldHeight-1 {
+		return true
+	}
+	return false
 }
 
 // Tasks:
@@ -209,8 +248,15 @@ func main() {
 				}
 			}
 		case <-ticker.C:
+			if borderCrash(g) {
+				fmt.Println("GAME OVER")
+				termbox.Flush()
+				time.Sleep(70 * time.Second)
+				return
+			}
 			g = step(g)
 		}
 		g.apple = aplleEaten(g)
+		g.e = eEaten(g)
 	}
 }
