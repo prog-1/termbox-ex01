@@ -158,6 +158,13 @@ func aplleEaten(g game) apple {
 	}
 	return g.ap
 }
+func appleborder(g game) apple {
+	w, h := termbox.Size()
+	if g.ap.pos.x == 0 || g.ap.pos.y == 0 || g.ap.pos.x == w-1 || g.ap.pos.y == h-1 {
+		g.ap = newAplle(w, h)
+	}
+	return g.ap
+}
 
 // Tasks:
 func main() {
@@ -213,7 +220,7 @@ func main() {
 			}
 			g = step(g)
 			g.ap = aplleEaten(g)
-
+			g.ap = appleborder(g)
 		}
 	}
 }
