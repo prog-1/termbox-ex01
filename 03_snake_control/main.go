@@ -71,6 +71,12 @@ func main() {
 			case termbox.KeyArrowRight:
 				v = coord{1, 0}
 				s = moveSnake(s, v)
+			case termbox.KeyArrowDown:
+				v = coord{0, 1}
+				s = moveSnake(s, v)
+			case termbox.KeyArrowUp:
+				v = coord{0, -1}
+				s = moveSnake(s, v)
 			// The program exits when a user presses 'Esc'.
 			case termbox.KeyEsc:
 				return
