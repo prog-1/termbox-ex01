@@ -38,7 +38,7 @@ type coord struct {
 // snake is a struct with fields representing a snake.
 type snake struct {
 	// Position of a snake.
-	pos [5]coord
+	pos [2]coord
 }
 
 type applePos struct {
@@ -73,7 +73,7 @@ func newEnergy(maxX, maxY int) eee {
 func newSnake(maxX, maxY int) snake {
 	// rand.Intn generates a pseudo-random number:
 	// https://pkg.go.dev/math/rand#Intn
-	return snake{[5]coord{{5, 5}, {4, 5}, {3, 5}, {2, 5}}}
+	return snake{[2]coord{{5, 2}, {4, 2}}}
 }
 
 // newGame returns a new game state.
