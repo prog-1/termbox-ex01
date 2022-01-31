@@ -17,9 +17,7 @@ const (
 	appleBody     = 'O'
 	appleFgColor  = termbox.ColorLightGreen
 	appleBgColor  = termbox.ColorDefault
-	borderBody    = '-'
-	borderFgColor = termbox.ColorLightGray
-	borderBgColor = termbox.ColorBlack
+	borderColor   = termbox.ColorBlue
 	energyBody    = 'E' // idea: if snake eats E, tail should become x2 longer
 	energyFgColor = termbox.ColorBlue
 	energyBgColor = termbox.ColorDefault
@@ -40,7 +38,7 @@ type coord struct {
 // snake is a struct with fields representing a snake.
 type snake struct {
 	// Position of a snake.
-	pos coord
+	pos [5]coord
 }
 
 type applePos struct {
@@ -75,7 +73,7 @@ func newEnergy(maxX, maxY int) eee {
 func newSnake(maxX, maxY int) snake {
 	// rand.Intn generates a pseudo-random number:
 	// https://pkg.go.dev/math/rand#Intn
-	return snake{coord{rand.Intn(maxX), rand.Intn(maxY)}}
+	return snake{[5]coord{{5, 5}, {4, 5}, {3, 5}, {2, 5}}}
 }
 
 // newGame returns a new game state.
@@ -95,7 +93,7 @@ func newGame() game {
 // drawSnakePosition draws the current snake position (as a debugging
 // information) in the buffer.
 func drawSnakePosition(g game) {
-	str := fmt.Sprintf("(%d, %d)", g.sn.pos.x, g.sn.pos.y)
+	str := fmt.Sprintf("(%d, %d)", g.sn.pos[0].x, g.sn.pos[0].y)
 	writeText(g.fieldWidth-len(str), 0, str, snakeFgColor, snakeBgColor)
 }
 func drawApllePosition(g game) {
@@ -110,7 +108,9 @@ func drawEnergyPosition(g game) {
 
 // drawSnake draws the snake in the buffer.
 func drawSnake(sn snake) {
-	termbox.SetCell(sn.pos.x, sn.pos.y, snakeBody, snakeFgColor, snakeBgColor)
+	for _, pos := range sn.pos {
+		termbox.SetCell(pos.x, pos.y, snakeBody, snakeFgColor, snakeBgColor)
+	}
 }
 
 func drawApple(apple applePos) {
@@ -131,6 +131,7 @@ func draw(g game) {
 	drawApple(g.apple)
 	drawEnergyPosition(g)
 	drawE(g.e)
+	newBorder(g.fieldWidth, g.fieldHeight)
 	// Update the "frame".
 	termbox.Flush()
 }
@@ -143,8 +144,8 @@ func mod(n, m int) int {
 
 // Makes a move for a snake. Returns a snake with an updated position.
 func moveSnake(s snake, v coord, fw, fh int) snake {
-	s.pos.x = mod(s.pos.x+v.x, fw)
-	s.pos.y = mod(s.pos.y+v.y, fh)
+	copy(s.pos[1:], s.pos[:])
+	s.pos[0] = coord{s.pos[0].x + v.x, s.pos[0].y + v.y}
 	return s
 }
 
@@ -156,7 +157,7 @@ func step(g game) game {
 
 func aplleEaten(g game) applePos {
 	w, h := termbox.Size()
-	if g.apple.pos.x == g.sn.pos.x && g.apple.pos.y == g.sn.pos.y {
+	if g.apple.pos.x == g.sn.pos[0].x && g.apple.pos.y == g.sn.pos[0].y {
 		g.apple = newApple(w, h)
 	}
 	return g.apple
@@ -164,7 +165,7 @@ func aplleEaten(g game) applePos {
 
 func eEaten(g game) eee {
 	w, h := termbox.Size()
-	if g.e.pos.x == g.sn.pos.x && g.e.pos.y == g.sn.pos.y {
+	if g.e.pos.x == g.sn.pos[0].x && g.e.pos.y == g.sn.pos[0].y {
 		g.e = newEnergy(w, h)
 	}
 	return g.e
@@ -177,30 +178,23 @@ func moveDown(g game) game  { g.v = coord{0, 1}; return g }
 
 //Hint for func border: https://github.com/mattkelly/snake-go/blob/master/border.go
 
-type border struct {
-	width, height int
-	coords        map[coord]int
+func newBorder(width, height int) {
+	for i := 0; i <= width; i++ {
+		termbox.SetBg(i, 0, borderColor)
+	}
+	for i := 0; i <= height; i++ {
+		termbox.SetBg(width-1, i, borderColor)
+	}
+	for i := 0; i <= width; i++ {
+		termbox.SetBg(i, height-1, borderColor)
+	}
+	for i := 0; i <= height; i++ {
+		termbox.SetBg(0, i, borderColor)
+	}
 }
 
-func drawborder() {
-	b := new(border)
-	w, h := termbox.Size()
-	b.width, b.height = w-1, h-1
-	b.coords = make(map[coord]int)
-
-	for x := 0; x < b.width; x++ {
-		b.coords[coord{x, 0}] = 1
-		b.coords[coord{x, b.height}] = 1
-	}
-	for y := 0; y < b.height+1; y++ {
-		b.coords[coord{0, y}] = 1
-		b.coords[coord{b.width, y}] = 1
-	}
-
-	return
-}
 func borderCrash(g game) bool {
-	if g.sn.pos.x == 0 || g.sn.pos.y == 0 || g.sn.pos.x == g.fieldWidth-1 || g.sn.pos.y == g.fieldHeight-1 {
+	if g.sn.pos[0].x == 0 || g.sn.pos[0].y == 0 || g.sn.pos[0].x == g.fieldWidth-1 || g.sn.pos[0].y == g.fieldHeight-1 {
 		return true
 	}
 	return false
@@ -231,6 +225,7 @@ func main() {
 
 	// This is the main event loop.
 	for {
+		termbox.Flush()
 		select {
 		case ev := <-eventQueue:
 			if ev.Type == termbox.EventKey {
@@ -251,7 +246,7 @@ func main() {
 			if borderCrash(g) {
 				fmt.Println("GAME OVER")
 				termbox.Flush()
-				time.Sleep(70 * time.Second)
+				time.Sleep(15 * time.Second)
 				return
 			}
 			g = step(g)
