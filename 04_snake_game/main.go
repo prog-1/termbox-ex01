@@ -40,7 +40,7 @@ type apple struct {
 // snake is a struct with fields representing a snake.
 type snake struct {
 	// Position of a snake.
-	pos coord
+	pos []coord
 }
 
 // game represents a state of the game.
@@ -59,9 +59,12 @@ func newAplle(maxX, maxY int) apple {
 // The snake is placed in a random position in the game field.
 // The movement direction is right.
 func newSnake(maxX, maxY int) snake {
-	// rand.Intn generates a pseudo-random number:
-	// https://pkg.go.dev/math/rand#Intn
-	return snake{coord{rand.Intn(maxX), rand.Intn(maxY)}}
+	var snake snake
+	snake.pos = append(snake.pos, coord{rand.Intn(maxX), rand.Intn(maxY)})
+	snake.pos = append(snake.pos, coord{snake.pos[0].x - 1, snake.pos[0].y})
+	snake.pos = append(snake.pos, coord{snake.pos[1].x - 1, snake.pos[0].y})
+	return snake
+
 }
 
 // newGame returns a new game state.
@@ -80,7 +83,7 @@ func newGame() game {
 // drawSnakePosition draws the current snake position (as a debugging
 // information) in the buffer.
 func drawSnakePosition(g game) {
-	str := fmt.Sprintf("(%d, %d)", g.sn.pos.x, g.sn.pos.y)
+	str := fmt.Sprintf("(%d, %d)", g.sn.pos[0].x, g.sn.pos[0].y)
 	writeText(g.fieldWidth-len(str), 0, str, snakeFgColor, snakeBgColor)
 }
 func drawApllePosition(g game) {
@@ -90,7 +93,10 @@ func drawApllePosition(g game) {
 
 // drawSnake draws the snake in the buffer.
 func drawSnake(sn snake) {
-	termbox.SetCell(sn.pos.x, sn.pos.y, snakeBody, snakeFgColor, snakeBgColor)
+	for _, pos := range sn.pos {
+		termbox.SetCell(pos.x, pos.y, snakeBody, snakeFgColor, snakeBgColor)
+	}
+
 }
 func drawApple(ap apple) {
 	termbox.SetCell(ap.pos.x, ap.pos.y, appleBody, appleFgColor, appleBgColor)
@@ -110,7 +116,7 @@ func drawborder() {
 }
 
 func borderCrash(g game) bool {
-	if g.sn.pos.x == 0 || g.sn.pos.y == 0 || g.sn.pos.x == g.fieldWidth-1 || g.sn.pos.y == g.fieldHeight-1 {
+	if g.sn.pos[0].x == 0 || g.sn.pos[0].y == 0 || g.sn.pos[0].x == g.fieldWidth-1 || g.sn.pos[0].y == g.fieldHeight-1 {
 		return true
 	}
 	return false
@@ -130,14 +136,14 @@ func draw(g game) {
 
 // mod is a custom implementation of the '%' (modulo) operator that always
 // returns positive numbers.
-func mod(n, m int) int {
-	return (n%m + m) % m
-}
+// func mod(n, m int) int {
+// 	return (n%m + m) % m
+// }
 
 // Makes a move for a snake. Returns a snake with an updated position.
 func moveSnake(s snake, v coord, fw, fh int) snake {
-	s.pos.x = mod(s.pos.x+v.x, fw)
-	s.pos.y = mod(s.pos.y+v.y, fh)
+	copy(s.pos[1:], s.pos[:])
+	s.pos[0] = coord{s.pos[0].x + v.x, s.pos[0].y + v.y}
 	return s
 }
 
@@ -151,12 +157,14 @@ func moveLeft(g game) game  { g.v = coord{-1, 0}; return g }
 func moveRight(g game) game { g.v = coord{1, 0}; return g }
 func moveUp(g game) game    { g.v = coord{0, -1}; return g }
 func moveDown(g game) game  { g.v = coord{0, 1}; return g }
-func aplleEaten(g game) apple {
+
+func aplleEaten(g game) (apple, []coord) {
 	w, h := termbox.Size()
-	if g.ap.pos.x == g.sn.pos.x && g.ap.pos.y == g.sn.pos.y {
+	if g.ap.pos.x == g.sn.pos[0].x && g.ap.pos.y == g.sn.pos[0].y {
 		g.ap = newAplle(w, h)
+		g.sn.pos = append(g.sn.pos, coord{g.sn.pos[len(g.sn.pos)-1].x - g.v.x, g.sn.pos[len(g.sn.pos)-1].y - g.v.y})
 	}
-	return g.ap
+	return g.ap, g.sn.pos
 }
 func appleborder(g game) apple {
 	w, h := termbox.Size()
@@ -214,12 +222,12 @@ func main() {
 			if borderCrash(g) {
 				fmt.Println("GAME OVER")
 				termbox.Flush()
-				time.Sleep(10 * time.Second)
+				time.Sleep(3 * time.Second)
 				return
 
 			}
 			g = step(g)
-			g.ap = aplleEaten(g)
+			g.ap, g.sn.pos = aplleEaten(g)
 			g.ap = appleborder(g)
 		}
 	}
