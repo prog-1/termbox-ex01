@@ -49,6 +49,9 @@ type game struct {
 	v     coord
 	ap    apple
 
+	sn snake
+	v  coord
+	// Game field dimensions.
 	fieldWidth, fieldHeight int
 }
 
@@ -136,6 +139,11 @@ w, h := termbox.Size()
 	}
 	return g.ap
 }
+
+func moveLeft(g game) game  { g.v = coord{-1, 0}; return g }
+func moveRight(g game) game { g.v = coord{1, 0}; return g }
+func moveUp(g game) game    { g.v = coord{0, -1}; return g }
+func moveDown(g game) game  { g.v = coord{0, 1}; return g }
 
 func moveLeft(g game) game  { g.v = coord{-1, 0}; return g }
 func moveRight(g game) game { g.v = coord{1, 0}; return g }
