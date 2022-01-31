@@ -13,13 +13,20 @@ const (
 	snakeBody    = '*'
 	snakeFgColor = termbox.ColorGreen
 	// Use the default background color for the snake.
-	snakeBgColor  = termbox.ColorDefault
-	appleBody     = 'O'
-	appleFgColor  = termbox.ColorRed
-	appleBgColor  = termbox.ColorDefault
-	borderBody    = '#'
-	borderFgColor = termbox.ColorWhite
-	borderBgColor = termbox.ColorDefault
+	snakeBgColor       = termbox.ColorDefault
+	appleBody          = 'O'
+	appleFgColor       = termbox.ColorRed
+	appleBgColor       = termbox.ColorDefault
+	borderBody         = '#'
+	borderFgColor      = termbox.ColorWhite
+	borderBgColor      = termbox.ColorDefault
+	gameover1Body      = '-'
+	gameover2Body      = '|'
+	gameover1FgColor   = termbox.ColorWhite
+	gameover1BgColor   = termbox.ColorDefault
+	gameover2FgColor   = termbox.ColorWhite
+	gameover2BgColor   = termbox.ColorDefault
+	gameoverCornerBody = '+'
 )
 
 // writeText writes a string to the buffer.
@@ -120,6 +127,25 @@ func borderCrash(g game) bool {
 		return true
 	}
 	return false
+
+}
+func gameover() {
+	w, h := termbox.Size()
+	for i := w/2 - 8; i < w/2+9; i++ {
+		termbox.SetCell(i, h/2-3, gameover1Body, gameover1FgColor, gameover1BgColor)
+		termbox.SetCell(i, h/2+3, gameover1Body, gameover1FgColor, gameover1BgColor)
+
+	}
+	for i := h/2 - 2; i < h/2+3; i++ {
+		termbox.SetCell(w/2+9, i, gameover2Body, gameover2FgColor, gameover2BgColor)
+		termbox.SetCell(w/2-9, i, gameover2Body, gameover2FgColor, gameover2BgColor)
+	}
+	termbox.SetCell(w/2+9, h/2+3, gameoverCornerBody, gameover2FgColor, gameover2BgColor)
+	termbox.SetCell(w/2+9, h/2-3, gameoverCornerBody, gameover2FgColor, gameover2BgColor)
+	termbox.SetCell(w/2-9, h/2+3, gameoverCornerBody, gameover2FgColor, gameover2BgColor)
+	termbox.SetCell(w/2-9, h/2-3, gameoverCornerBody, gameover2FgColor, gameover2BgColor)
+
+	writeText(w/2-4, h/2, "GAME OVER", gameover1FgColor, gameover1BgColor)
 }
 
 // Redraws the terminal.
@@ -153,10 +179,30 @@ func step(g game) game {
 	return g
 }
 
-func moveLeft(g game) game  { g.v = coord{-1, 0}; return g }
-func moveRight(g game) game { g.v = coord{1, 0}; return g }
-func moveUp(g game) game    { g.v = coord{0, -1}; return g }
-func moveDown(g game) game  { g.v = coord{0, 1}; return g }
+func moveLeft(g game) game {
+	if g.v.x != 1 {
+		g.v = coord{-1, 0}
+	}
+	return g
+}
+func moveRight(g game) game {
+	if g.v.x != -1 {
+		g.v = coord{1, 0}
+	}
+	return g
+}
+func moveUp(g game) game {
+	if g.v.y != 1 {
+		g.v = coord{0, -1}
+	}
+	return g
+}
+func moveDown(g game) game {
+	if g.v.y != -1 {
+		g.v = coord{0, 1}
+	}
+	return g
+}
 
 func aplleEaten(g game) (apple, []coord) {
 	w, h := termbox.Size()
@@ -220,7 +266,7 @@ func main() {
 			}
 		case <-ticker.C:
 			if borderCrash(g) {
-				fmt.Println("GAME OVER")
+				gameover()
 				termbox.Flush()
 				time.Sleep(3 * time.Second)
 				return
