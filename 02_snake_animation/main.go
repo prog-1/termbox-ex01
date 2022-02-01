@@ -23,7 +23,12 @@ type coord struct {
 type snake struct {
 	// Position of a snake.
 	pos coord
+	// Movement direction of a snake.
+	dir      coord
+	movedown int
 }
+
+// newSnake returns a new struct instance representing a snake.
 
 // Redraws the terminal.
 func drawSnake(s snake) {
@@ -33,13 +38,22 @@ func drawSnake(s snake) {
 }
 
 // Makes a move for a snake and returns a snake with an updated position.
-func moveSnake(s snake, v coord) snake {
-	return snake{pos: coord{x: s.pos.x + v.x, y: s.pos.y + v.y}}
+func moveSnake(s snake) snake {
+	if s.movedown == 1 {
+		s.pos.x -= s.dir.x
+		s.pos.y += s.dir.y
+		s.movedown = 0
+	} else {
+		s.pos.x += s.dir.x
+		s.pos.y -= s.dir.y
+		s.movedown = 1
+	}
+	return s
 }
 
 // Makes a single iteration for a snake.
 func step(s snake, dir coord) snake {
-	s = moveSnake(s, dir)
+	s = moveSnake(s)
 	drawSnake(s)
 	return s
 }
@@ -63,3 +77,5 @@ func main() {
 		time.Sleep(100 * time.Millisecond)
 	}
 }
+
+//go run ./02_snake_animation/main.go
