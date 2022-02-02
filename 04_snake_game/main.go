@@ -5,6 +5,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"reflect"
 	"time"
 
 	"github.com/nsf/termbox-go"
@@ -16,7 +17,7 @@ const (
 	// Use the default background color for the snake.
 	snakeBgColor = termbox.ColorDefault
 
-	appleBody    = 'o'
+	appleBody    = '🍏'
 	appleFgColor = termbox.ColorYellow
 	appleBgColor = termbox.ColorDefault
 )
@@ -100,16 +101,6 @@ func newGame() game {
 	}
 }
 
-// func mainMenuColor() (choice int) {
-//	   fmt.Println(`Please select the color of your snake:
-// 1) Green
-// 2) Orange
-// 3) Blue
-// 4) Exit`)
-//	   fmt.Scanln(&choice)
-//	   return
-// }
-
 // drawSnakePosition draws the current snake position (as a debugging
 // information) in the buffer.
 func drawSnakePosition(g game) {
@@ -118,9 +109,16 @@ func drawSnakePosition(g game) {
 }
 
 func drawScore(g game) {
-	str := fmt.Sprintf("(Score: %d)", g.ap.score)
-	writeText(g.fieldWidth/2, 0, str, termbox.ColorWhite, snakeBgColor)
-
+	str := fmt.Sprintf("Score: %d", g.ap.score)
+	if g.ap.score < 5 { // the color will change depending on the score
+		writeText((g.fieldWidth-len(str))/2, 0, str, termbox.ColorWhite, snakeBgColor)
+	} else if g.ap.score >= 5 && g.ap.score < 10 {
+		writeText((g.fieldWidth-len(str))/2, 0, str, termbox.ColorLightCyan, snakeBgColor)
+	} else if g.ap.score >= 10 && g.ap.score < 20 {
+		writeText((g.fieldWidth-len(str))/2, 0, str, termbox.ColorLightGreen, snakeBgColor)
+	} else if g.ap.score >= 20 {
+		writeText((g.fieldWidth-len(str))/2, 0, str, termbox.ColorLightMagenta, snakeBgColor)
+	}
 }
 
 // drawSnake draws the snake in the buffer.
@@ -132,20 +130,23 @@ func drawSnake(sn snake) {
 	}
 }
 
-func drawApple(a apple) {
-	termbox.SetCell(a.pos.x, a.pos.y, appleBody, appleFgColor, appleBgColor)
-
+func drawApple(ap apple) {
+	termbox.SetCell(ap.pos.x, ap.pos.y, appleBody, appleFgColor, appleBgColor)
 }
 
 func drawBorders(g game) {
 	for i := 0; i < g.fieldWidth; i++ {
 		termbox.SetBg(i, 1, termbox.ColorRed)
-		termbox.SetBg(i, g.fieldHeight-1, termbox.ColorRed)
+		termbox.SetBg(i, g.fieldHeight-1, termbox.ColorLightCyan)
 	}
-	for j := 0; j < g.fieldHeight; j++ {
-		termbox.SetBg(0, j+1, termbox.ColorRed)
-		termbox.SetBg(g.fieldWidth-1, j+1, termbox.ColorRed)
+	for j := 1; j < g.fieldHeight; j++ {
+		termbox.SetBg(0, j, termbox.ColorLightMagenta)
+		termbox.SetBg(g.fieldWidth-1, j, termbox.ColorLightGreen)
 	}
+	termbox.SetBg(0, 1, termbox.ColorLightYellow)
+	termbox.SetBg(0, g.fieldHeight-1, termbox.ColorLightYellow)
+	termbox.SetBg(g.fieldWidth-1, 1, termbox.ColorLightYellow)
+	termbox.SetBg(g.fieldWidth-1, g.fieldHeight-1, termbox.ColorLightYellow)
 }
 
 // Redraws the terminal.
@@ -175,13 +176,31 @@ func moveSnake(s snake, v coord, fw, fh int) snake {
 }
 
 func HitsTheWalls(g game) bool {
+	str := fmt.Sprintln("Game Over")
 	if g.sn.pos[0].x == 0 || g.sn.pos[0].x == g.fieldWidth-1 || g.sn.pos[0].y == 1 || g.sn.pos[0].y == g.fieldHeight-1 {
-		writeText(g.fieldWidth/2, g.fieldHeight/2, "Game Over", termbox.ColorRed|termbox.AttrBold, termbox.ColorDefault)
+		termbox.Clear(snakeFgColor, snakeBgColor)
+		writeText((g.fieldWidth-len(str))/2, g.fieldHeight/2, str, termbox.ColorRed|termbox.AttrBold, termbox.ColorDefault)
 		termbox.Flush()
 		time.Sleep(5 * time.Second)
 		termbox.Clear(snakeFgColor, snakeBgColor)
 		termbox.Flush()
 		return true
+	}
+	return false
+}
+
+func HitsItself(g game) bool {
+	str := fmt.Sprintln("Game Over")
+	for _, pos := range g.sn.pos[2:] {
+		if g.sn.pos[0] == pos {
+			termbox.Clear(snakeFgColor, snakeBgColor)
+			writeText((g.fieldWidth-len(str))/2, g.fieldHeight/2, str, termbox.ColorRed|termbox.AttrBold, termbox.ColorDefault)
+			termbox.Flush()
+			time.Sleep(5 * time.Second)
+			termbox.Clear(snakeFgColor, snakeBgColor)
+			termbox.Flush()
+			return true
+		}
 	}
 	return false
 }
@@ -196,17 +215,40 @@ func step(g game) game {
 		g.sn.pos = append([]coord{{g.sn.pos[0].x, g.sn.pos[0].y}}, g.sn.pos...)
 	}
 
-	if HitsTheWalls(g) {
+	if HitsTheWalls(g) || HitsItself(g) {
 		os.Exit(0)
 	}
 
 	return g
 }
 
-func moveLeft(g game) game  { g.v = coord{-1, 0}; return g }
-func moveRight(g game) game { g.v = coord{1, 0}; return g }
-func moveUp(g game) game    { g.v = coord{0, -1}; return g }
-func moveDown(g game) game  { g.v = coord{0, 1}; return g }
+func moveLeft(g game) game {
+	if !reflect.DeepEqual(g.v, coord{1, 0}) {
+		g.v = coord{-1, 0}
+	}
+	return g
+}
+
+func moveRight(g game) game {
+	if !reflect.DeepEqual(g.v, coord{-1, 0}) {
+		g.v = coord{1, 0}
+	}
+	return g
+}
+
+func moveUp(g game) game {
+	if !reflect.DeepEqual(g.v, coord{0, 1}) {
+		g.v = coord{0, -1}
+	}
+	return g
+}
+
+func moveDown(g game) game {
+	if !reflect.DeepEqual(g.v, coord{0, -1}) {
+		g.v = coord{0, 1}
+	}
+	return g
+}
 
 func mainMenuDifficulty() (choice int) {
 	fmt.Println(`Select difficulty:
@@ -271,6 +313,29 @@ func main() {
 					g = moveRight(g)
 				case termbox.KeyEsc:
 					return
+				case termbox.KeyEnter: // I also decided to add a 5 second pause
+					str := fmt.Sprintln("Pause")
+					writeText((g.fieldWidth-len(str))/2, g.fieldHeight/2, str, termbox.ColorWhite|termbox.AttrBold, termbox.ColorDefault)
+					timeleft := "5"
+					writeText((g.fieldWidth-1)/2, (g.fieldHeight+2)/2, timeleft, termbox.ColorWhite|termbox.AttrBold, termbox.ColorDefault)
+					termbox.Flush()
+					time.Sleep(1 * time.Second)
+					timeleft = "4"
+					writeText((g.fieldWidth-1)/2, (g.fieldHeight+2)/2, timeleft, termbox.ColorWhite|termbox.AttrBold, termbox.ColorDefault)
+					termbox.Flush()
+					time.Sleep(1 * time.Second)
+					timeleft = "3"
+					writeText((g.fieldWidth-1)/2, (g.fieldHeight+2)/2, timeleft, termbox.ColorWhite|termbox.AttrBold, termbox.ColorDefault)
+					termbox.Flush()
+					time.Sleep(1 * time.Second)
+					timeleft = "2"
+					writeText((g.fieldWidth-1)/2, (g.fieldHeight+2)/2, timeleft, termbox.ColorWhite|termbox.AttrBold, termbox.ColorDefault)
+					termbox.Flush()
+					time.Sleep(1 * time.Second)
+					timeleft = "1"
+					writeText((g.fieldWidth-1)/2, (g.fieldHeight+2)/2, timeleft, termbox.ColorWhite|termbox.AttrBold, termbox.ColorDefault)
+					termbox.Flush()
+					time.Sleep(1 * time.Second)
 				}
 			}
 		case <-ticker.C:
