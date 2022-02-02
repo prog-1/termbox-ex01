@@ -10,6 +10,9 @@ import (
 )
 
 const (
+	appleBody    = '🍎'
+	appleFg      = termbox.ColorLightRed
+	appleBg      = termbox.ColorDefault
 	snakeBody    = '*'
 	snakeFgColor = termbox.ColorGreen
 	snakeBgColor = termbox.ColorDefault
@@ -27,12 +30,14 @@ type coord struct { // coord is a coordinate on a plane.
 
 type snake struct { // snake is a struct with fields representing a snake.
 	pos [5]coord // Position of a snake.
-
 }
-
+type apple struct {
+	pos coord
+}
 type game struct { // game represents a state of the game.
 	sn                      snake
 	v                       coord
+	ap                      apple
 	fieldWidth, fieldHeight int // Game field dimensions.
 }
 
@@ -43,9 +48,11 @@ func newSnake(maxX, maxY int) snake {
 	// rand.Intn generates a pseudo-random number:
 	//return snake{[5]coord{{5, 5}, {4, 5}, {3, 5}, {2, 5}}}
 	// https://pkg.go.dev/math/rand#Intn
-	return snake{[5]coord{{rand.Intn(maxX), rand.Intn(maxY)}, {rand.Intn(maxX - 1), rand.Intn(maxY)}, {rand.Intn(maxX - 2), rand.Intn(maxY)}, {rand.Intn(maxX - 3), rand.Intn(maxY)}, {rand.Intn(maxX - 4), rand.Intn(maxY)}}}
+	return snake{[5]coord{{rand.Intn(maxX - 1), rand.Intn(maxY - 1)}, {rand.Intn(maxX - 2), rand.Intn(maxY - 1)}, {rand.Intn(maxX - 3), rand.Intn(maxY - 1)}, {rand.Intn(maxX - 4), rand.Intn(maxY - 1)}, {rand.Intn(maxX - 5), rand.Intn(maxY - 1)}}}
 }
-
+func newApple(maxX, maxY int) apple {
+	return apple{coord{rand.Intn(maxX), rand.Intn(maxY)}}
+}
 func newGame() game { // newGame returns a new game state.
 	w, h := termbox.Size() // Sets game field dimensions to the size of the terminal.
 	return game{
@@ -53,11 +60,18 @@ func newGame() game { // newGame returns a new game state.
 		fieldHeight: h,
 		sn:          newSnake(w, h),
 		v:           coord{1, 0},
+		ap:          newApple(w, h),
 	}
 }
 
 // drawSnakePosition draws the current snake position (as a debugging
 // information) in the buffer.
+func writeGameOver(g game) {
+	gOC := termbox.ColorRed
+	gBc := termbox.ColorDefault
+	str := "Game Over"
+	writeText((g.fieldWidth/2)-len(str), (g.fieldHeight/2)-1, str, gOC, gBc)
+}
 func drawSnakePosition(g game) {
 	str := fmt.Sprintf("(%d, %d)", g.sn.pos[0].x, g.sn.pos[0].y)
 	writeText(g.fieldWidth-len(str), 0, str, snakeFgColor, snakeBgColor)
@@ -67,12 +81,14 @@ func drawScore(g game) {
 	str := fmt.Sprintf("Score: %d", temporaryScore)
 	writeText((g.fieldWidth/2)-len(str), 0, str, snakeFgColor, snakeBgColor)
 }
-func drawHearts(g game) { // in process
+func drawHearts(g game) { // maybe in future
 	heart := "♥"
 	str := fmt.Sprintf("%s%s%s", heart, heart, heart)
 	writeText(0, 0, str, snakeFgColor, snakeBgColor)
 }
-
+func drawApple(ap apple) {
+	termbox.SetCell(ap.pos.x, ap.pos.y, appleBody, appleFg, appleBg)
+}
 func drawSnake(sn snake) { // drawSnake draws the snake in the buffer.
 	for _, pos := range sn.pos {
 		termbox.SetCell(pos.x, pos.y, snakeBody, snakeFgColor, snakeBgColor)
@@ -95,14 +111,21 @@ func drawBorder(g game) {
 		termbox.SetCell(g.fieldWidth-1, i, ch, bColor, bBackC)
 	}
 }
-
+func borderExists(g game) bool {
+	if g.sn.pos[0].x == 1 || g.sn.pos[0].y == 1 || g.sn.pos[0].x == g.fieldWidth-1 || g.sn.pos[0].y == g.fieldHeight-1 {
+		return true
+	}
+	return false
+}
 func draw(g game) { // Redraws the terminal.
 	termbox.Clear(snakeFgColor, snakeBgColor) // Clear the old "frame".
 	drawBorder(g)
+	writeGameOver(g)
 	drawHearts(g)
 	drawScore(g)
 	drawSnakePosition(g)
 	drawSnake(g.sn)
+	drawApple(g.ap)
 	termbox.Flush() // Update the "frame".
 }
 
@@ -138,6 +161,7 @@ func main() {
 	go func() {
 		for {
 			eventQueue <- termbox.PollEvent()
+
 		}
 	}()
 
