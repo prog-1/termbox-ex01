@@ -45,16 +45,11 @@ type applePos struct {
 	pos coord
 }
 
-type eee struct {
-	pos coord
-}
-
 // game represents a state of the game.
 type game struct {
 	sn    snake
 	v     coord
 	apple applePos
-	e     eee
 	score int
 	// Game field dimensions.
 	fieldWidth, fieldHeight int
@@ -257,14 +252,14 @@ func main() {
 		case <-ticker.C:
 			if borderCrash(g) {
 				termbox.Clear(termbox.ColorRed, termbox.ColorDefault)
-				writeText(65, 3, `GAME OVER. The snake died`, termbox.ColorRed, termbox.ColorDefault)
+				writeText(65, 3, `GAME OVER. The snake died!`, termbox.ColorRed, termbox.ColorDefault)
 				termbox.Flush()
 				time.Sleep(5 * time.Second)
 				return
 			}
 			if HitsTail(g) {
 				termbox.Clear(termbox.ColorRed, termbox.ColorDefault)
-				writeText(65, 3, `GAME OVER. The snake killed itself`, termbox.ColorRed, termbox.ColorDefault)
+				writeText(65, 3, `GAME OVER. The snake killed itself!`, termbox.ColorRed, termbox.ColorDefault)
 				termbox.Flush()
 				time.Sleep(5 * time.Second)
 				return
