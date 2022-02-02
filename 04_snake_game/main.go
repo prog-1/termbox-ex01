@@ -61,7 +61,7 @@ type game struct {
 }
 
 func newApple(maxX, maxY int) applePos {
-	return applePos{coord{rand.Intn(maxX), rand.Intn(maxY)}}
+	return applePos{coord{rand.Intn(maxX - 1), rand.Intn(maxY - 1)}}
 }
 
 // newSnake returns a new struct instance representing a snake.
@@ -158,10 +158,37 @@ func aplleEaten(g game) (applePos, []coord, int) {
 	return g.apple, g.sn.pos, g.score
 }
 
-func moveLeft(g game) game  { g.v = coord{-1, 0}; return g }
-func moveRight(g game) game { g.v = coord{1, 0}; return g }
-func moveUp(g game) game    { g.v = coord{0, -1}; return g }
-func moveDown(g game) game  { g.v = coord{0, 1}; return g }
+func moveLeft(g game) game {
+	vec := coord{1, 0}
+	if g.v != vec {
+		g.v = coord{-1, 0}
+	}
+	return g
+}
+
+func moveRight(g game) game {
+	vec := coord{-1, 0}
+	if g.v != vec {
+		g.v = coord{1, 0}
+	}
+	return g
+}
+
+func moveUp(g game) game {
+	vec := coord{0, 1}
+	if g.v != vec {
+		g.v = coord{0, -1}
+	}
+	return g
+}
+
+func moveDown(g game) game {
+	vec := coord{0, -1}
+	if g.v != vec {
+		g.v = coord{0, 1}
+	}
+	return g
+}
 
 func newBorder(width, height int) {
 	for i := 0; i <= width; i++ {
@@ -246,14 +273,6 @@ func main() {
 		}
 		g.apple, g.sn.pos, g.score = aplleEaten(g)
 	}
-}
-
-func appleAtBorders(g game) applePos { //It is an important function, because I have a problem: apples can exist at borders
-	w, h := termbox.Size()
-	if g.apple.pos.x == 0 || g.apple.pos.x == w-1 || g.apple.pos.y == 0 || g.apple.pos.y == h-1 {
-		g.apple = newApple(w, h)
-	}
-	return g.apple
 }
 
 func HitsTail(g game) bool { //from other work
