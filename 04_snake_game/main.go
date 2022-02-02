@@ -141,21 +141,14 @@ func draw(g game) {
 	termbox.Flush()
 }
 
-// mod is a custom implementation of the '%' (modulo) operator that always
-// returns positive numbers.
-func mod(n, m int) int {
-
-	return (n%m + m) % m
-}
-
 // Makes a move for a snake. Returns a game with an updated position.
 func moveSnake(g game) game {
 	for i := range g.sn.body {
 		if i != len(g.sn.body)-1 {
 			g.sn.body[i] = g.sn.body[i+1]
 		} else {
-			g.sn.body[i].x = mod(g.sn.body[i].x+g.sn.dir.x, g.fieldWidth)
-			g.sn.body[i].y = mod(g.sn.body[i].y+g.sn.dir.y, g.fieldHeight)
+			g.sn.body[i].x += g.sn.dir.x
+			g.sn.body[i].y += g.sn.dir.y
 		}
 	}
 
