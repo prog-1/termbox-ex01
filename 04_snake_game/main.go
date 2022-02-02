@@ -138,6 +138,7 @@ func draw(g game) {
 	drawSnake(g.sn)
 	drawBorder(g)
 	// Update the "frame".
+	printText(coord{0, 0}, strconv.Itoa(g.apple.x)+" "+strconv.Itoa(g.apple.y))
 	termbox.Flush()
 }
 
@@ -190,7 +191,7 @@ func step(g game) game {
 	w, h := g.fieldWidth, g.fieldHeight
 	if g.apple == g.sn.body[len(g.sn.body)-1] {
 		g.score++
-		g.apple = coord{random(1, w-2), random(1, h-2)}
+		g.apple = coord{random(1, w-3), random(1, h-3)}
 		g.sn.body = append([]coord{{g.sn.body[0].x, g.sn.body[0].y}}, g.sn.body...)
 	}
 	g = moveSnake(g)
@@ -245,26 +246,31 @@ func main() {
 
 	ticker := time.NewTicker(70 * time.Millisecond)
 	defer ticker.Stop()
-
+	var callQuee []func(game) game
 	// This is the main event loop.
 	for {
 		select {
 		case ev := <-eventQueue:
 			if ev.Type == termbox.EventKey {
+
 				switch ev.Key {
 				case termbox.KeyArrowDown:
-					g = moveDown(g)
+					callQuee = append(callQuee, moveDown)
 				case termbox.KeyArrowUp:
-					g = moveUp(g)
+					callQuee = append(callQuee, moveUp)
 				case termbox.KeyArrowLeft:
-					g = moveLeft(g)
+					callQuee = append(callQuee, moveLeft)
 				case termbox.KeyArrowRight:
-					g = moveRight(g)
+					callQuee = append(callQuee, moveRight)
 				case termbox.KeyEsc:
 					return
 				}
 			}
 		case <-ticker.C:
+			if len(callQuee) != 0 {
+				g = callQuee[0](g)
+				callQuee = callQuee[1:]
+			}
 			g = step(g)
 			if collision(g) {
 				GameOver(g.score)
