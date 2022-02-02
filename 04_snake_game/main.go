@@ -14,7 +14,7 @@ const (
 	snakeFgColor = termbox.ColorRed
 	// Use the default background color for the snake.
 	snakeBgColor  = termbox.ColorDefault
-	appleBody     = 'O'
+	appleBody     = '0'
 	appleFgColor  = termbox.ColorLightGreen
 	appleBgColor  = termbox.ColorDefault
 	borderColor   = termbox.ColorBlue
@@ -38,7 +38,7 @@ type coord struct {
 // snake is a struct with fields representing a snake.
 type snake struct {
 	// Position of a snake.
-	pos [2]coord
+	pos []coord
 }
 
 type applePos struct {
@@ -55,6 +55,7 @@ type game struct {
 	v     coord
 	apple applePos
 	e     eee
+	score int
 	// Game field dimensions.
 	fieldWidth, fieldHeight int
 }
@@ -63,31 +64,33 @@ func newApple(maxX, maxY int) applePos {
 	return applePos{coord{rand.Intn(maxX), rand.Intn(maxY)}}
 }
 
-func newEnergy(maxX, maxY int) eee {
-	return eee{coord{rand.Intn(maxX), rand.Intn(maxY)}}
-}
-
 // newSnake returns a new struct instance representing a snake.
 // The snake is placed in a random position in the game field.
 // The movement direction is right.
 func newSnake(maxX, maxY int) snake {
 	// rand.Intn generates a pseudo-random number:
 	// https://pkg.go.dev/math/rand#Intn
-	return snake{[2]coord{{5, 2}, {4, 2}}}
+	return snake{[]coord{{5, 2}, {4, 2}}}
 }
 
 // newGame returns a new game state.
 func newGame() game {
 	// Sets game field dimensions to the size of the terminal.
 	w, h := termbox.Size()
+	var sc int
 	return game{
 		fieldWidth:  w,
 		fieldHeight: h,
 		sn:          newSnake(w, h),
 		v:           coord{1, 0},
 		apple:       newApple(w, h),
-		e:           newEnergy(w, h),
+		score:       sc,
 	}
+}
+
+func drawscore(g game) {
+	writeText(g.fieldWidth/2, 0, fmt.Sprint("Your points:", g.score), termbox.ColorWhite|termbox.AttrBold, termbox.ColorDefault)
+
 }
 
 // drawSnakePosition draws the current snake position (as a debugging
@@ -97,11 +100,6 @@ func drawSnakePosition(g game) {
 	writeText(g.fieldWidth-len(str), 0, str, snakeFgColor, snakeBgColor)
 }
 func drawApllePosition(g game) {
-	str := fmt.Sprintf("(%d, %d)", g.apple.pos.x, g.apple.pos.y)
-	writeText(g.fieldWidth-len(str), 0, str, appleFgColor, appleBgColor)
-}
-
-func drawEnergyPosition(g game) {
 	str := fmt.Sprintf("(%d, %d)", g.apple.pos.x, g.apple.pos.y)
 	writeText(g.fieldWidth-len(str), 0, str, appleFgColor, appleBgColor)
 }
@@ -117,10 +115,6 @@ func drawApple(apple applePos) {
 	termbox.SetCell(apple.pos.x, apple.pos.y, appleBody, appleFgColor, appleBgColor)
 }
 
-func drawE(e eee) {
-	termbox.SetCell(e.pos.x, e.pos.y, energyBody, energyFgColor, energyBgColor)
-}
-
 // Redraws the terminal.
 func draw(g game) {
 	// Clear the old "frame".
@@ -129,9 +123,8 @@ func draw(g game) {
 	drawSnake(g.sn)
 	drawApllePosition(g)
 	drawApple(g.apple)
-	drawEnergyPosition(g)
-	drawE(g.e)
 	newBorder(g.fieldWidth, g.fieldHeight)
+	drawscore(g)
 	// Update the "frame".
 	termbox.Flush()
 }
@@ -155,28 +148,20 @@ func step(g game) game {
 	return g
 }
 
-func aplleEaten(g game) applePos {
+func aplleEaten(g game) (applePos, []coord, int) {
 	w, h := termbox.Size()
 	if g.apple.pos.x == g.sn.pos[0].x && g.apple.pos.y == g.sn.pos[0].y {
 		g.apple = newApple(w, h)
+		g.sn.pos = append(g.sn.pos, coord{g.sn.pos[len(g.sn.pos)-1].x - g.v.x, g.sn.pos[len(g.sn.pos)-1].y - g.v.y})
+		g.score++
 	}
-	return g.apple
-}
-
-func eEaten(g game) eee {
-	w, h := termbox.Size()
-	if g.e.pos.x == g.sn.pos[0].x && g.e.pos.y == g.sn.pos[0].y {
-		g.e = newEnergy(w, h)
-	}
-	return g.e
+	return g.apple, g.sn.pos, g.score
 }
 
 func moveLeft(g game) game  { g.v = coord{-1, 0}; return g }
 func moveRight(g game) game { g.v = coord{1, 0}; return g }
 func moveUp(g game) game    { g.v = coord{0, -1}; return g }
 func moveDown(g game) game  { g.v = coord{0, 1}; return g }
-
-//Hint for func border: https://github.com/mattkelly/snake-go/blob/master/border.go
 
 func newBorder(width, height int) {
 	for i := 0; i <= width; i++ {
@@ -244,14 +229,22 @@ func main() {
 			}
 		case <-ticker.C:
 			if borderCrash(g) {
-				fmt.Println("GAME OVER")
+				termbox.Clear(termbox.ColorRed, termbox.ColorDefault)
+				writeText(65, 3, `GAME OVER`, termbox.ColorRed, termbox.ColorDefault)
 				termbox.Flush()
-				time.Sleep(15 * time.Second)
+				time.Sleep(5 * time.Second)
 				return
 			}
 			g = step(g)
 		}
-		g.apple = aplleEaten(g)
-		g.e = eEaten(g)
+		g.apple, g.sn.pos, g.score = aplleEaten(g)
 	}
+}
+
+func appleAtBorders(g game) applePos { //It is an important function, because I have a problem: apples can exist at borders
+	w, h := termbox.Size()
+	if g.apple.pos.x == 0 || g.apple.pos.x == w-1 || g.apple.pos.y == 0 || g.apple.pos.y == h-1 {
+		g.apple = newApple(w, h)
+	}
+	return g.apple
 }
