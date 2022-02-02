@@ -230,7 +230,14 @@ func main() {
 		case <-ticker.C:
 			if borderCrash(g) {
 				termbox.Clear(termbox.ColorRed, termbox.ColorDefault)
-				writeText(65, 3, `GAME OVER`, termbox.ColorRed, termbox.ColorDefault)
+				writeText(65, 3, `GAME OVER. The snake died`, termbox.ColorRed, termbox.ColorDefault)
+				termbox.Flush()
+				time.Sleep(5 * time.Second)
+				return
+			}
+			if HitsTail(g) {
+				termbox.Clear(termbox.ColorRed, termbox.ColorDefault)
+				writeText(65, 3, `GAME OVER. The snake killed itself`, termbox.ColorRed, termbox.ColorDefault)
 				termbox.Flush()
 				time.Sleep(5 * time.Second)
 				return
@@ -247,4 +254,17 @@ func appleAtBorders(g game) applePos { //It is an important function, because I 
 		g.apple = newApple(w, h)
 	}
 	return g.apple
+}
+
+func HitsTail(g game) bool { //from other work
+	tmp := 0
+	for _, v := range g.sn.pos {
+		if tmp == 1 {
+			if v.x == g.sn.pos[0].x && v.y == g.sn.pos[0].y {
+				return true
+			}
+		}
+		tmp = 1
+	}
+	return false
 }
