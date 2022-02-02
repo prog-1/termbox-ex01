@@ -106,7 +106,7 @@ func newGame() game {
 	w, h := termbox.Size()
 	return game{
 		sn:          newSnake(w-10, h-10),
-		apple:       coord{rand.Intn(w), rand.Intn(h)},
+		apple:       coord{random(1, w-3), random(1, h-3)},
 		fieldWidth:  w,
 		fieldHeight: h,
 	}
