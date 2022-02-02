@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"os"
 	"time"
 
 	"github.com/nsf/termbox-go"
@@ -35,7 +36,7 @@ type coord struct {
 // snake is a struct with fields representing a snake.
 type snake struct {
 	// Position of a snake.
-	pos coord
+	pos []coord
 }
 
 type apple struct {
@@ -56,14 +57,20 @@ type game struct {
 // newSnake returns a new struct instance representing a snake.
 // The snake is placed in a random position in the game field.
 // The movement direction is right.
+
+// func mod(n, m int) int {
+// 	return (n%m + m) % m
+// }
+
 func newSnake(maxX, maxY int) snake {
 	// rand.Intn generates a pseudo-random number:
 	// https://pkg.go.dev/math/rand#Intn
-	return snake{coord{rand.Intn(maxX), rand.Intn(maxY)}}
+	return snake{[]coord{{5, 5}, {4, 5}, {3, 5}, {2, 5}}}
 }
 
 func newApple(maxX, maxY int) apple {
-	return apple{coord{rand.Intn(maxX), rand.Intn(maxY)}}
+	maxX, maxY = termbox.Size()
+	return apple{coord{rand.Intn(maxX - 1), rand.Intn(maxY - 1)}}
 }
 
 // newGame returns a new game state.
@@ -82,7 +89,7 @@ func newGame() game {
 // drawSnakePosition draws the current snake position (as a debugging
 // information) in the buffer.
 func drawSnakePosition(g game) {
-	str := fmt.Sprintf("(%d, %d)", g.sn.pos.x, g.sn.pos.y)
+	str := fmt.Sprintf("(%d, %d)", g.sn.pos[0].x, g.sn.pos[0].y)
 	writeText(g.fieldWidth-len(str), 0, str, snakeFgColor, snakeBgColor)
 }
 
@@ -93,7 +100,9 @@ func drawApplePosition(g game) {
 
 // drawSnake draws the snake in the buffer.
 func drawSnake(sn snake) {
-	termbox.SetCell(sn.pos.x, sn.pos.y, snakeBody, snakeFgColor, snakeBgColor)
+	for _, pos := range sn.pos {
+		termbox.SetCell(pos.x, pos.y, snakeBody, snakeFgColor, snakeBgColor)
+	}
 }
 
 func drawApple(ap apple) {
@@ -132,22 +141,55 @@ func draw(g game) {
 
 // mod is a custom implementation of the '%' (modulo) operator that always
 // returns positive numbers.
-func mod(n, m int) int {
-	return (n%m + m) % m
-}
 
 // Makes a move for a snake. Returns a snake with an updated position.
 func moveSnake(s snake, v coord, fw, fh int) snake {
-	s.pos.x = mod(s.pos.x+v.x, fw)
-	s.pos.y = mod(s.pos.y+v.y, fh)
+	copy(s.pos[1:], s.pos[:])
+	s.pos[0] = coord{s.pos[0].x + v.x, s.pos[0].y + v.y}
 	return s
 }
 
+func hitTheBorder(g game) bool {
+	termbox.Clear(snakeFgColor, snakeBgColor)
+	termbox.Clear(appleFgColor, appleBgColor)
+	termbox.Clear(borderColor, appleIcon)
+	if g.sn.pos[0].x == 0 || g.sn.pos[0].x == g.fieldWidth-1 || g.sn.pos[0].y == 0 || g.sn.pos[0].y == g.fieldHeight-1 {
+		writeText(g.fieldWidth/2-19, g.fieldHeight/2, "SNAKE HIT THE BORDER, THE GAME IS OVER", termbox.ColorWhite|termbox.AttrBold, termbox.ColorBlack)
+		termbox.Flush()
+		time.Sleep(4 * time.Second)
+		return true
+	}
+	return false
+}
+
+func biteItself(g game) bool {
+	termbox.Clear(snakeFgColor, snakeBgColor)
+	termbox.Clear(appleFgColor, appleBgColor)
+	termbox.Clear(borderColor, appleIcon)
+	for _, s := range g.sn.pos[2:] {
+		if g.sn.pos[0] == s {
+			writeText(g.fieldWidth/2-19, g.fieldHeight/2, "THE SNAKE BIT ITSELF, THE GAME IS OVER", termbox.ColorWhite|termbox.AttrBold, termbox.ColorBlack)
+			termbox.Flush()
+			time.Sleep(4 * time.Second)
+			return true
+		}
+	}
+	return false
+}
+
 func step(g game) game {
+	for hitTheBorder(g) {
+		os.Exit(0)
+	}
+	for biteItself(g) {
+		os.Exit(0)
+	}
 	w, h := termbox.Size()
-	if g.sn.pos.x == g.ap.po.x && g.sn.pos.y == g.ap.po.y {
+	if g.sn.pos[0].x == g.ap.po.x && g.sn.pos[0].y == g.ap.po.y {
 		g.ap = newApple(w, h)
 		g.count++
+		// a = append([]T{x}, a...)
+		g.sn.pos = append([]coord{{g.sn.pos[0].x, g.sn.pos[0].y}}, g.sn.pos...)
 	}
 	g.sn = moveSnake(g.sn, g.v, g.fieldWidth, g.fieldHeight)
 	draw(g)
@@ -155,13 +197,37 @@ func step(g game) game {
 }
 
 func drawCount(g game) {
-	writeText(g.fieldWidth/2, 0, fmt.Sprint("Points:", g.count), termbox.ColorWhite|termbox.AttrBold, termbox.ColorDefault)
+	writeText(g.fieldWidth/2-3, 0, fmt.Sprint("Points:", g.count), termbox.ColorWhite|termbox.AttrBold, termbox.ColorDefault)
 }
 
-func moveLeft(g game) game  { g.v = coord{-1, 0}; return g }
-func moveRight(g game) game { g.v = coord{1, 0}; return g }
-func moveUp(g game) game    { g.v = coord{0, -1}; return g }
-func moveDown(g game) game  { g.v = coord{0, 1}; return g }
+func moveLeft(g game) game {
+	vv := coord{1, 0}
+	if g.v != vv {
+		g.v = coord{-1, 0}
+	}
+	return g
+}
+func moveRight(g game) game {
+	vv := coord{-1, 0}
+	if g.v != vv {
+		g.v = coord{1, 0}
+	}
+	return g
+}
+func moveUp(g game) game {
+	vv := coord{0, 1}
+	if g.v != vv {
+		g.v = coord{0, -1}
+	}
+	return g
+}
+func moveDown(g game) game {
+	vv := coord{0, -1}
+	if g.v != vv {
+		g.v = coord{0, 1}
+	}
+	return g
+}
 
 // Tasks:
 func main() {
