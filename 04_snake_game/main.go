@@ -138,7 +138,6 @@ func draw(g game) {
 	drawSnake(g.sn)
 	drawBorder(g)
 	// Update the "frame".
-	printText(coord{0, 0}, strconv.Itoa(g.apple.x)+" "+strconv.Itoa(g.apple.y))
 	termbox.Flush()
 }
 
