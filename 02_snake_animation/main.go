@@ -25,7 +25,6 @@ type snake struct {
 	pos coord
 }
 
-// Redraws the terminal.
 func drawSnake(s snake) {
 	termbox.Clear(snakeFgColor, snakeBgColor)
 	termbox.SetCell(s.pos.x, s.pos.y, snakeBody, snakeFgColor, snakeBgColor)
@@ -38,6 +37,7 @@ func moveSnake(s snake, v coord) snake {
 }
 
 // Makes a single iteration for a snake.
+
 func step(s snake, dir coord) snake {
 	s = moveSnake(s, dir)
 	drawSnake(s)
