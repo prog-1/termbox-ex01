@@ -45,8 +45,8 @@ type game struct {
 }
 
 func newSnake(maxX, maxY int) snake {
-	x := rand.Intn(maxX - 1)
-	y := rand.Intn(maxY - 1)
+	x := rand.Intn(maxX-1) + 1
+	y := rand.Intn(maxY-1) + 1
 	return snake{[]coord{{x, y}}}
 }
 
@@ -93,11 +93,11 @@ func drawSnake(s snake) {
 }
 
 func newApple(fw, fh int) apple {
-	return apple{coord{rand.Intn(fw - 1), rand.Intn(fh - 1)}}
+	return apple{coord{rand.Intn(fw-1) + 1, rand.Intn(fh-1) + 1}}
 }
 func newAppleCoord(g game) game {
-	g.a.pos.x = rand.Intn(g.fieldWidth - 1)
-	g.a.pos.y = rand.Intn(g.fieldHeight - 1)
+	g.a.pos.x = rand.Intn(g.fieldWidth-1) + 1
+	g.a.pos.y = rand.Intn(g.fieldHeight-1) + 1
 	return g
 }
 func drawApple(g game) {
