@@ -3,12 +3,20 @@ package main
 import (
 	"log"
 	"math/rand"
+	"strconv"
 	"time"
 
 	"github.com/nsf/termbox-go"
 )
 
 const (
+	gameOvertext = `________  ________  _____ ______   _______           ________  ___      ___ _______   ________     
+|\   ____\|\   __  \|\   _ \  _   \|\  ___ \         |\   __  \|\  \    /  /|\  ___ \ |\   __  \    
+\ \  \___|\ \  \|\  \ \  \\\__\ \  \ \   __/|        \ \  \|\  \ \  \  /  / | \   __/|\ \  \|\  \   
+ \ \  \  __\ \   __  \ \  \\|__| \  \ \  \_|/__       \ \  \\\  \ \  \/  / / \ \  \_|/_\ \   _  _\  
+  \ \  \|\  \ \  \ \  \ \  \    \ \  \ \  \_|\ \       \ \  \\\  \ \    / /   \ \  \_|\ \ \  \\  \| 
+   \ \_______\ \__\ \__\ \__\    \ \__\ \_______\       \ \_______\ \__/ /     \ \_______\ \__\\ _\ 
+    \|_______|\|__|\|__|\|__|     \|__|\|_______|        \|_______|\|__|/       \|_______|\|__|\|__|`
 	apple        = 'A'
 	snakeBody    = '*'
 	snakeFgColor = termbox.ColorRed
@@ -42,6 +50,25 @@ type game struct {
 	apple coord
 	// Game field dimensions.
 	fieldWidth, fieldHeight int
+	score                   int
+}
+
+func printText(c coord, text string) {
+	i := 0
+	for _, v := range text {
+		if v == '\n' {
+			c.y++
+			i = 0
+			continue
+		}
+		termbox.SetCell(c.x+i, c.y, v, snakeFgColor, snakeBgColor)
+		i++
+	}
+
+}
+
+func random(min, max int) int {
+	return rand.Intn(max-min) + min
 }
 
 // newSnake returns a new struct instance representing a snake.
@@ -50,10 +77,10 @@ type game struct {
 func newSnake(maxX, maxY int) snake {
 	// rand.Intn generates a pseudo-random number:
 	// https://pkg.go.dev/math/rand#Intn
-	x, y := rand.Intn(maxX), rand.Intn(maxY)
+	x, y := random(3, maxX), random(0, maxY)
 	return snake{
-		body: []coord{{x, y}, {x, y + 2}, {x, y}},
-		dir:  coord{},
+		body: []coord{{x, y}, {x - 1, y}, {x - 2, y}, {x - 3, y}},
+		dir:  coord{-1, 0},
 	}
 }
 
@@ -78,8 +105,10 @@ func newGame() game {
 
 // drawSnake draws the snake in the buffer.
 func drawSnake(sn snake) {
-	for _, v := range sn.body {
-		termbox.SetCell(v.x, v.y, snakeBody, snakeFgColor, snakeBgColor)
+	for i, v := range sn.body {
+		if i != len(sn.body)-1 {
+			termbox.SetCell(v.x, v.y, snakeBody, snakeFgColor, snakeBgColor)
+		}
 	}
 }
 
@@ -116,9 +145,28 @@ func moveSnake(g game) game {
 	return g
 }
 
+func collision(g game) bool {
+	m := g.sn.body[0]
+	for _, v := range g.sn.body[1 : len(g.sn.body)-1] {
+		if v.x == m.x && v.y == m.y {
+			return true
+		}
+	}
+	return false
+}
+
+func GameOver(score int) {
+	termbox.Clear(snakeFgColor, snakeBgColor)
+	printText(coord{0, 0}, gameOvertext)
+	printText(coord{46, 10}, "Your score: "+strconv.Itoa(score))
+	termbox.Flush()
+	time.Sleep(5 * time.Second)
+}
+
 func step(g game) game {
 	w, h := termbox.Size()
 	if g.apple == g.sn.body[len(g.sn.body)-1] {
+		g.score++
 		g.apple = coord{rand.Intn(w), rand.Intn(h)}
 		g.sn.body = append([]coord{{g.sn.body[0].x, g.sn.body[0].y}}, g.sn.body...)
 	}
@@ -127,10 +175,30 @@ func step(g game) game {
 	return g
 }
 
-func moveLeft(g game) game  { g.v = coord{-1, 0}; return g }
-func moveRight(g game) game { g.v = coord{1, 0}; return g }
-func moveUp(g game) game    { g.v = coord{0, -1}; return g }
-func moveDown(g game) game  { g.v = coord{0, 1}; return g }
+func moveLeft(g game) game {
+	if (g.sn.dir != coord{1, 0}) {
+		g.sn.dir = coord{-1, 0}
+	}
+	return g
+}
+func moveRight(g game) game {
+	if (g.sn.dir != coord{-1, 0}) {
+		g.sn.dir = coord{1, 0}
+	}
+	return g
+}
+func moveUp(g game) game {
+	if (g.sn.dir != coord{0, 1}) {
+		g.sn.dir = coord{0, -1}
+	}
+	return g
+}
+func moveDown(g game) game {
+	if (g.sn.dir != coord{0, -1}) {
+		g.sn.dir = coord{0, 1}
+	}
+	return g
+}
 
 // Tasks:
 func main() {
@@ -174,6 +242,10 @@ func main() {
 				}
 			}
 		case <-ticker.C:
+			if collision(g) {
+				GameOver(g.score)
+				return
+			}
 			g = step(g)
 		}
 	}
