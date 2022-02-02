@@ -29,11 +29,12 @@ type coord struct { // coord is a coordinate on a plane.
 }
 
 type snake struct { // snake is a struct with fields representing a snake.
-	pos [5]coord // Position of a snake.
+	pos []coord // Position of a snake.
 }
 type apple struct {
 	pos coord
 }
+
 type game struct { // game represents a state of the game.
 	sn                      snake
 	v                       coord
@@ -48,11 +49,12 @@ func newSnake(maxX, maxY int) snake {
 	// rand.Intn generates a pseudo-random number:
 	//return snake{[5]coord{{5, 5}, {4, 5}, {3, 5}, {2, 5}}}
 	// https://pkg.go.dev/math/rand#Intn
-	return snake{[5]coord{{rand.Intn(maxX - 1), rand.Intn(maxY - 1)}, {rand.Intn(maxX - 2), rand.Intn(maxY - 1)}, {rand.Intn(maxX - 3), rand.Intn(maxY - 1)}, {rand.Intn(maxX - 4), rand.Intn(maxY - 1)}, {rand.Intn(maxX - 5), rand.Intn(maxY - 1)}}}
+	return snake{[]coord{{rand.Intn(maxX - 1), rand.Intn(maxY - 1)}, {rand.Intn(maxX - 2), rand.Intn(maxY - 1)}, {rand.Intn(maxX - 3), rand.Intn(maxY - 1)}, {rand.Intn(maxX - 4), rand.Intn(maxY - 1)}}}
 }
 func newApple(maxX, maxY int) apple {
 	return apple{coord{rand.Intn(maxX), rand.Intn(maxY)}}
 }
+
 func newGame() game { // newGame returns a new game state.
 	w, h := termbox.Size() // Sets game field dimensions to the size of the terminal.
 	return game{
@@ -111,21 +113,22 @@ func drawBorder(g game) {
 		termbox.SetCell(g.fieldWidth-1, i, ch, bColor, bBackC)
 	}
 }
-func borderExists(g game) bool {
-	if g.sn.pos[0].x == 1 || g.sn.pos[0].y == 1 || g.sn.pos[0].x == g.fieldWidth-1 || g.sn.pos[0].y == g.fieldHeight-1 {
-		return true
+func borderExists(g game) {
+	if g.sn.pos[0].x == 1 || g.sn.pos[0].y == 2 || g.sn.pos[0].x == g.fieldWidth-2 || g.sn.pos[0].y == g.fieldHeight-2 {
+		writeGameOver(g)
+		time.Sleep(100 * time.Millisecond)
+		return
 	}
-	return false
 }
 func draw(g game) { // Redraws the terminal.
 	termbox.Clear(snakeFgColor, snakeBgColor) // Clear the old "frame".
+	drawApple(g.ap)
 	drawBorder(g)
 	writeGameOver(g)
 	drawHearts(g)
 	drawScore(g)
 	drawSnakePosition(g)
 	drawSnake(g.sn)
-	drawApple(g.ap)
 	termbox.Flush() // Update the "frame".
 }
 
@@ -137,7 +140,15 @@ func moveSnake(s snake, v coord, fw, fh int) snake { // Makes a move for a snake
 
 func step(g game) game {
 	g.sn = moveSnake(g.sn, g.v, g.fieldWidth, g.fieldHeight)
+	if g.ap.pos == g.sn.pos[0] {
+		ap := newApple(g.fieldWidth, g.fieldHeight)
+		drawApple(ap)
+		g.sn.pos = append([]coord{{g.sn.pos[0].x, g.sn.pos[0].y}}, g.sn.pos...)
+		//score++
+		termbox.Flush()
+	}
 	draw(g)
+	borderExists(g)
 	return g
 }
 
@@ -161,7 +172,6 @@ func main() {
 	go func() {
 		for {
 			eventQueue <- termbox.PollEvent()
-
 		}
 	}()
 
@@ -169,6 +179,7 @@ func main() {
 	defer ticker.Stop()
 
 	for { // This is the main event loop.
+
 		select {
 		case ev := <-eventQueue:
 			if ev.Type == termbox.EventKey {
@@ -185,6 +196,7 @@ func main() {
 					return
 				}
 			}
+
 		case <-ticker.C:
 			g = step(g)
 		}
