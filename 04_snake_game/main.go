@@ -11,9 +11,9 @@ import (
 
 const (
 	snakeBody    = '*'
-	snakeTail    = '#'
-	appleicon    = '@'
-	snakeFgColor = termbox.ColorRed
+	snakeTail    = 'o'
+	appleIcon    = '🍎'
+	snakeFgColor = termbox.ColorGreen
 	snakeBgColor = termbox.ColorDefault
 	borderColor  = termbox.ColorWhite
 )
@@ -29,13 +29,14 @@ type coord struct {
 }
 
 type snake struct {
-	pos coord
+	pos []coord
 }
 type apple struct {
 	pos coord
 }
 
 type game struct {
+	x                       int
 	score                   int
 	s                       snake
 	a                       apple
@@ -44,7 +45,9 @@ type game struct {
 }
 
 func newSnake(maxX, maxY int) snake {
-	return snake{coord{rand.Intn(maxX - 1), rand.Intn(maxY - 1)}}
+	x := rand.Intn(maxX - 1)
+	y := rand.Intn(maxY - 1)
+	return snake{[]coord{{x, y}}}
 }
 
 func newGame() game {
@@ -56,6 +59,7 @@ func newGame() game {
 		a:           newApple(w, h),
 		dir:         coord{1, 0},
 		score:       0,
+		x:           1,
 	}
 }
 func drawBorder(fw, fh int) {
@@ -78,26 +82,31 @@ func drawScore(g game) {
 	writeText(0, 0, str, termbox.ColorRed, borderColor)
 }
 func drawSnakeCord(g game) {
-	str := fmt.Sprintf("(%d, %d)", g.s.pos.x, g.s.pos.y)
-	writeText(g.fieldWidth-len(str), 0, str, snakeFgColor, borderColor)
+	str := fmt.Sprintf("(%d, %d)", g.s.pos[0].x, g.s.pos[0].y)
+	writeText(g.fieldWidth-len(str), 0, str, termbox.ColorRed, borderColor)
 }
 
 func drawSnake(s snake) {
-	termbox.SetCell(s.pos.x, s.pos.y, snakeBody, snakeFgColor, snakeBgColor)
-}
-func drawTail(s snake) {
-	termbox.SetCell(s.pos.x, s.pos.y, snakeTail, snakeFgColor, snakeBgColor)
-}
-func newApple(fw, fh int) apple {
-	apx := rand.Intn(fw - 1)
-	apy := rand.Intn(fh - 1)
-	return apple{coord{apx, apy}}
-}
-func drawApple(g game) {
-	termbox.SetCell(g.a.pos.x, g.a.pos.y, appleicon, termbox.ColorRed, termbox.ColorDefault)
-	termbox.Flush()
+	for _, pos := range s.pos {
+		termbox.SetCell(pos.x, pos.y, snakeBody, snakeFgColor, snakeBgColor)
+	}
 }
 
+func newApple(fw, fh int) apple {
+	return apple{coord{rand.Intn(fw - 1), rand.Intn(fh - 1)}}
+}
+func newAppleCoord(g game) game {
+	g.a.pos.x = rand.Intn(g.fieldWidth - 1)
+	g.a.pos.y = rand.Intn(g.fieldHeight - 1)
+	return g
+}
+func drawApple(g game) {
+	termbox.SetCell(g.a.pos.x, g.a.pos.y, appleIcon, termbox.ColorRed, termbox.ColorDefault)
+	termbox.Flush()
+}
+func drawTail(s snake) {
+	termbox.SetCell(s.pos[0].x, s.pos[0].y, snakeTail, snakeFgColor, snakeBgColor)
+}
 func draw(g game) {
 	termbox.Clear(snakeFgColor, snakeBgColor)
 	drawBorder(g.fieldWidth, g.fieldHeight)
@@ -109,30 +118,46 @@ func draw(g game) {
 	termbox.Flush()
 }
 
-func mod(n, m int) int {
-	return (n%m + m) % m
-}
-
 func moveSnake(s snake, dir coord, fw, fh int) snake {
-	s.pos.x = mod(s.pos.x+dir.x, fw)
-	s.pos.y = mod(s.pos.y+dir.y, fh)
+	copy(s.pos[1:], s.pos[:])
+	s.pos[0] = coord{s.pos[0].x + dir.x, s.pos[0].y + dir.y}
+	return s
+}
+func moveAndAdd(s snake, dir coord, fw, fh int) snake {
+	var new coord = coord{s.pos[len(s.pos)-1].x, s.pos[len(s.pos)-1].y}
+	copy(s.pos[1:], s.pos[:])
+	s.pos[0] = coord{s.pos[0].x + dir.x, s.pos[0].y + dir.y}
+	s.pos = append(s.pos, new)
 	return s
 }
 
 func step(g game) game {
-	g.s = moveSnake(g.s, g.dir, g.fieldWidth, g.fieldHeight)
+	if g.score == g.x {
+		g.x++
+		g.s = moveAndAdd(g.s, g.dir, g.fieldWidth, g.fieldHeight)
+	} else {
+		g.s = moveSnake(g.s, g.dir, g.fieldWidth, g.fieldHeight)
+	}
 	draw(g)
 	return g
 }
 func checkb(g game) bool {
-	if g.s.pos.x == 0 || g.s.pos.x == g.fieldWidth-1 || g.s.pos.y == 0 || g.s.pos.y == g.fieldHeight-1 {
+	if g.s.pos[0].x == 0 || g.s.pos[0].x == g.fieldWidth-1 || g.s.pos[0].y == 0 || g.s.pos[0].y == g.fieldHeight-1 {
 		return true
 	}
 	return false
 }
 func checka(g game) bool {
-	if g.s.pos.x == g.a.pos.x && g.s.pos.y == g.a.pos.y {
+	if g.s.pos[0].x == g.a.pos.x && g.s.pos[0].y == g.a.pos.y {
 		return true
+	}
+	return false
+}
+func checkSnakeCoord(g game) bool {
+	for i := 1; i != len(g.s.pos)-1; i++ {
+		if g.s.pos[0] == g.s.pos[i] {
+			return true
+		}
 	}
 	return false
 }
@@ -163,13 +188,29 @@ func main() {
 			if ev.Type == termbox.EventKey {
 				switch ev.Key {
 				case termbox.KeyArrowDown:
-					g.dir = coord{0, 1}
+					if g.dir.y == -1 {
+						g.dir = coord{0, -1}
+					} else {
+						g.dir = coord{0, 1}
+					}
 				case termbox.KeyArrowUp:
-					g.dir = coord{0, -1}
+					if g.dir.y == 1 {
+						g.dir = coord{0, 1}
+					} else {
+						g.dir = coord{0, -1}
+					}
 				case termbox.KeyArrowLeft:
-					g.dir = coord{-1, 0}
+					if g.dir.x == 1 {
+						g.dir = coord{1, 0}
+					} else {
+						g.dir = coord{-1, 0}
+					}
 				case termbox.KeyArrowRight:
-					g.dir = coord{1, 0}
+					if g.dir.x == -1 {
+						g.dir = coord{-1, 0}
+					} else {
+						g.dir = coord{1, 0}
+					}
 				case termbox.KeyEsc:
 					return
 				}
@@ -182,10 +223,20 @@ func main() {
 				time.Sleep(2 * time.Second)
 				return
 			}
+			if g.score > 3 {
+				if checkSnakeCoord(g) {
+					termbox.Clear(termbox.ColorWhite, termbox.ColorBlue)
+					writeText(70, 5, `Game Over`, termbox.ColorWhite, termbox.ColorBlue)
+					termbox.Flush()
+					time.Sleep(2 * time.Second)
+					return
+				}
+			}
 			if checka(g) {
 				g.score++
-				newApple(g.fieldWidth, g.fieldHeight)
+				g = newAppleCoord(g)
 			}
+
 			g = step(g)
 		}
 	}
