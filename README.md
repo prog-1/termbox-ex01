@@ -101,23 +101,16 @@ Modify `02_snake_animation` so the snake moves along the sides of a rectangle.
 
 All exercises here must be completed by modifying `04_snake_game` program.
 
-1. Draw the field borders (walls).
-2. Collisions (alternatives):
+The game must support the following features:
 
-   * The snake "bounces" back when it hits the walls.
-   * Show a "Game Over" screen and quit the game when the snake hits the walls.
+1. The game field must have borders (walls). The game stops when the snake hits the border, and "Game over" message/screen is shown.
+2. Apples are shown in the game field. When a snake eats an apple
+   * the game score gets increased by one (the score must be shown on the screen)
+   * the eaten apple dissapears and a new apple appears in a new location.
+   * the snake tail grows by one.
+3. The snake is not allowed to move in the opposite to the current movement direction (e.g. if the snake moves right, changing the direction to left (by pressing `←`) is forbidden).
+4. The snake is not allowed to hit itself. The game stops when the snake hits its tail, and "Game over" message/screen is shown.
 
-3. Snake tail (alternatives):
-
-   * Add the tail with the length of 2 cells to the snake (the total snake
-    length must be 3 cells).
-   * Add the tail of an arbitrary length (the length is a const) to the snake.
-
-4. Apples:
-
-   1. Show an apple in a random position in the field. When the snake, eats an
-     apple, the apple reappears in a new position.
-   1. Show a score for eating the apples.
-   1. Increase the tail length when the snake eats the apple.
-
-5. Show the "Game over" screen and quit the game when the snake hits itself.
+Extra points are given if
+ * the game is visually attractive (colorful borders, a separate "Game over" screen),
+ * a pull request with a solution doesn't have merge conflicts.

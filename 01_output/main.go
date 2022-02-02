@@ -9,8 +9,10 @@ import (
 
 // writeText writes a string to the buffer.
 func writeText(x, y int, s string, fg, bg termbox.Attribute) {
-	for i, ch := range s {
+	i := 0
+	for _, ch := range s {
 		termbox.SetCell(x+i, y, ch, fg, bg)
+		i++
 	}
 }
 
