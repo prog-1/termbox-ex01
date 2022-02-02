@@ -12,6 +12,10 @@ const (
 	snakeFgColor = termbox.ColorRed
 	// Use the default background color for the snake.
 	snakeBgColor = termbox.ColorDefault
+	maxSteps     = 3
+	startX       = 10
+	startY       = 10
+	// I don't know why, but with startPos coord in snake struct the program won't work.
 )
 
 // coord is a coordinate on a plane.
@@ -23,6 +27,8 @@ type coord struct {
 type snake struct {
 	// Position of a snake.
 	pos coord
+	// startPos coord
+	// maxSteps int
 }
 
 // Redraws the terminal.
@@ -56,10 +62,37 @@ func main() {
 	}
 	defer termbox.Close()
 
-	s := snake{pos: coord{5, 5}}
+	s := snake{pos: coord{startX, startY}}
+	// s := snake{pos: coord{10, 10}, maxSteps: 3}
+	// s.startPos = coord{s.pos.x, s.pos.y}
+	dir := coord{0, -1}
 	// This is the main event loop.
 	for {
-		s = step(s, coord{1, 0})
+		// if s.pos.x == s.startPos.x && s.pos.y == s.startPos.y {
+		// 	dir = coord{0, -1}
+		// }
+		// if s.pos.y == s.startPos.y-s.maxSteps && s.pos.x == s.startPos.x {
+		// 	dir = coord{1, 0}
+		// }
+		// if s.pos.x == s.startPos.x+s.maxSteps && s.pos.y == s.startPos.y-s.maxSteps {
+		// 	dir = coord{0, 1}
+		// }
+		// if s.pos.y == s.startPos.y && s.pos.x == s.startPos.x+s.maxSteps {
+		// 	dir = coord{-1, 0}
+		// }
+		if s.pos.x == startX && s.pos.y == startY {
+			dir = coord{0, -1}
+		}
+		if s.pos.y == startY-maxSteps && s.pos.x == startX {
+			dir = coord{1, 0}
+		}
+		if s.pos.x == startX+maxSteps && s.pos.y == startY-maxSteps {
+			dir = coord{0, 1}
+		}
+		if s.pos.y == startY && s.pos.x == startX+maxSteps {
+			dir = coord{-1, 0}
+		}
+		s = step(s, dir)
 		time.Sleep(100 * time.Millisecond)
 	}
 }
