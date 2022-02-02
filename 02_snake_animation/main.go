@@ -38,8 +38,25 @@ func moveSnake(s snake, v coord) snake {
 }
 
 // Makes a single iteration for a snake.
-func step(s snake, dir coord) snake {
-	s = moveSnake(s, dir)
+func step(s snake) snake {
+	x, y := s.pos.x, s.pos.y
+	if x == 50 && y == 5 {
+		s.dir.x = 0
+		s.dir.y = 1
+	}
+	if x == 50 && y == 15 {
+		s.dir.x = -1
+		s.dir.y = 0
+	}
+	if x == 5 && y == 15 {
+		s.dir.x = 0
+		s.dir.y = -1
+	}
+	if x == 5 && y == 5 {
+		s.dir.x = 1
+		s.dir.y = 0
+	}
+	s = moveSnake(s)
 	drawSnake(s)
 	return s
 }
