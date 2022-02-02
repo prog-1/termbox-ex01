@@ -13,7 +13,13 @@ const (
 	snakeBody    = '*'
 	snakeFgColor = termbox.ColorRed
 	// Use the default background color for the snake.
-	snakeBgColor = termbox.ColorDefault
+	snakeBgColor  = termbox.ColorDefault
+	appleBody     = 'O'
+	appleFgColor  = termbox.ColorGreen
+	appleBgColor  = termbox.ColorDefault
+	borderBody    = '#'
+	borderFgColor = termbox.ColorWhite
+	borderBgColor = termbox.ColorDefault
 )
 
 // writeText writes a string to the buffer.
@@ -27,6 +33,9 @@ func writeText(x, y int, s string, fg, bg termbox.Attribute) {
 type coord struct {
 	x, y int
 }
+type apple struct {
+	pos coord
+}
 
 // snake is a struct with fields representing a snake.
 type snake struct {
@@ -36,10 +45,18 @@ type snake struct {
 
 // game represents a state of the game.
 type game struct {
+	sn    snake
+	v     coord
+	ap    apple
+
 	sn snake
 	v  coord
 	// Game field dimensions.
 	fieldWidth, fieldHeight int
+}
+
+func newApple(maxX, maxY int) applePos {
+	return apple{coord{rand.Intn(maxX), rand.Intn(maxY)}}
 }
 
 // newSnake returns a new struct instance representing a snake.
@@ -60,6 +77,7 @@ func newGame() game {
 		fieldHeight: h,
 		sn:          newSnake(w, h),
 		v:           coord{1, 0},
+		ap:          newAplle(w, h),
 	}
 }
 
@@ -69,7 +87,18 @@ func drawSnakePosition(g game) {
 	str := fmt.Sprintf("(%d, %d)", g.sn.pos.x, g.sn.pos.y)
 	writeText(g.fieldWidth-len(str), 0, str, snakeFgColor, snakeBgColor)
 }
+func drawApllePosition(g game) {
+	str := fmt.Sprintf("(%d, %d)", g.ap.pos.x, g.ap.pos.y)
+	writeText(g.fieldWidth-len(str), 0, str, appleFgColor, appleBgColor)
+}
 
+// drawSnake draws the snake in the buffer.
+func drawSnake(sn snake) {
+	termbox.SetCell(sn.pos.x, sn.pos.y, snakeBody, snakeFgColor, snakeBgColor)
+}
+func drawApple(ap apple) {
+	termbox.SetCell(ap.pos.x, ap.pos.y, appleBody, appleFgColor, appleBgColor)
+}
 // drawSnake draws the snake in the buffer.
 func drawSnake(sn snake) {
 	termbox.SetCell(sn.pos.x, sn.pos.y, snakeBody, snakeFgColor, snakeBgColor)
@@ -81,7 +110,8 @@ func draw(g game) {
 	termbox.Clear(snakeFgColor, snakeBgColor)
 	drawSnakePosition(g)
 	drawSnake(g.sn)
-	// Update the "frame".
+	drawApplePosition(g)
+	drawApple(g.ap)
 	termbox.Flush()
 }
 
@@ -103,6 +133,17 @@ func step(g game) game {
 	draw(g)
 	return g
 }
+w, h := termbox.Size()
+	if g.ap.pos.x == g.sn.pos.x && g.ap.pos.y == g.sn.pos.y {
+		g.ap = newAplle(w, h)
+	}
+	return g.ap
+}
+
+func moveLeft(g game) game  { g.v = coord{-1, 0}; return g }
+func moveRight(g game) game { g.v = coord{1, 0}; return g }
+func moveUp(g game) game    { g.v = coord{0, -1}; return g }
+func moveDown(g game) game  { g.v = coord{0, 1}; return g }
 
 func moveLeft(g game) game  { g.v = coord{-1, 0}; return g }
 func moveRight(g game) game { g.v = coord{1, 0}; return g }
