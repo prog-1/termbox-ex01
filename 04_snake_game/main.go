@@ -149,16 +149,16 @@ func gameover(g game) {
 	w, h := termbox.Size()
 	for i := w/2 - 8; i < w/2+9; i++ {
 		termbox.SetCell(i, h/2-3, gameover1Body, gameover1FgColor, gameover1BgColor)
-		termbox.SetCell(i, h/2+3, gameover1Body, gameover1FgColor, gameover1BgColor)
+		termbox.SetCell(i, h/2+4, gameover1Body, gameover1FgColor, gameover1BgColor)
 
 	}
-	for i := h/2 - 2; i < h/2+3; i++ {
+	for i := h/2 - 2; i < h/2+4; i++ {
 		termbox.SetCell(w/2+9, i, gameover2Body, gameover2FgColor, gameover2BgColor)
 		termbox.SetCell(w/2-9, i, gameover2Body, gameover2FgColor, gameover2BgColor)
 	}
-	termbox.SetCell(w/2+9, h/2+3, gameoverCornerBody, gameover2FgColor, gameover2BgColor)
+	termbox.SetCell(w/2+9, h/2+4, gameoverCornerBody, gameover2FgColor, gameover2BgColor)
 	termbox.SetCell(w/2+9, h/2-3, gameoverCornerBody, gameover2FgColor, gameover2BgColor)
-	termbox.SetCell(w/2-9, h/2+3, gameoverCornerBody, gameover2FgColor, gameover2BgColor)
+	termbox.SetCell(w/2-9, h/2+4, gameoverCornerBody, gameover2FgColor, gameover2BgColor)
 	termbox.SetCell(w/2-9, h/2-3, gameoverCornerBody, gameover2FgColor, gameover2BgColor)
 
 	writeText(w/2-4, h/2, "GAME OVER", gameover1FgColor, gameover1BgColor)
@@ -236,7 +236,7 @@ func aplleEaten(g game) (apple, []coord, int) {
 }
 func appleborder(g game) apple {
 	w, h := termbox.Size()
-	if g.ap.pos.x == 0 || g.ap.pos.y == 0 || g.ap.pos.x == w-1 || g.ap.pos.y == h-1 {
+	if g.ap.pos.x == 0 || g.ap.pos.y == 1 || g.ap.pos.x == w-1 || g.ap.pos.y == h-1 || g.ap.pos.y == 0 {
 		g.ap = newAplle(w, h)
 	}
 	return g.ap
