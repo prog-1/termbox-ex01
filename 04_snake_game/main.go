@@ -136,7 +136,7 @@ func drawApple(ap apple) {
 
 func drawBorders(g game) {
 	for i := 0; i < g.fieldWidth; i++ {
-		termbox.SetBg(i, 1, termbox.ColorRed)
+		termbox.SetBg(i, 1, termbox.ColorLightRed)
 		termbox.SetBg(i, g.fieldHeight-1, termbox.ColorLightCyan)
 	}
 	for j := 1; j < g.fieldHeight; j++ {
@@ -216,6 +216,7 @@ func step(g game) game {
 	}
 
 	if HitsTheWalls(g) || HitsItself(g) {
+		termbox.Close()
 		os.Exit(0)
 	}
 
@@ -291,6 +292,7 @@ func main() {
 	} else if choice == 3 {
 		ticker = time.NewTicker(50 * time.Millisecond)
 	} else if choice == 4 {
+		termbox.Close()
 		os.Exit(0)
 	} else {
 		fmt.Println("ERROR: wrong choice")
