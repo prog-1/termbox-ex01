@@ -67,6 +67,22 @@ func printText(c coord, text string) {
 
 }
 
+func drawBorder(g game) {
+	w, h := g.fieldWidth, g.fieldHeight
+	for x := 0; x < w; x++ {
+		termbox.SetCell(x, 0, ' ', snakeFgColor, termbox.ColorCyan)
+	}
+	for x := 0; x < w; x++ {
+		termbox.SetCell(x, h-1, ' ', snakeFgColor, termbox.ColorCyan)
+	}
+	for y := 0; y < h; y++ {
+		termbox.SetCell(0, y, ' ', snakeFgColor, termbox.ColorCyan)
+	}
+	for y := 0; y < h; y++ {
+		termbox.SetCell(w-1, y, ' ', snakeFgColor, termbox.ColorCyan)
+	}
+}
+
 func random(min, max int) int {
 	return rand.Intn(max-min) + min
 }
@@ -77,7 +93,7 @@ func random(min, max int) int {
 func newSnake(maxX, maxY int) snake {
 	// rand.Intn generates a pseudo-random number:
 	// https://pkg.go.dev/math/rand#Intn
-	x, y := random(3, maxX), random(0, maxY)
+	x, y := random(10, maxX), random(10, maxY)
 	return snake{
 		body: []coord{{x, y}, {x - 1, y}, {x - 2, y}, {x - 3, y}},
 		dir:  coord{-1, 0},
@@ -89,7 +105,7 @@ func newGame() game {
 	// Sets game field dimensions to the size of the terminal.
 	w, h := termbox.Size()
 	return game{
-		sn:          newSnake(w, h),
+		sn:          newSnake(w-10, h-10),
 		apple:       coord{rand.Intn(w), rand.Intn(h)},
 		fieldWidth:  w,
 		fieldHeight: h,
@@ -120,6 +136,7 @@ func draw(g game) {
 	termbox.SetCell(g.apple.x, g.apple.y, apple, snakeFgColor, snakeBgColor)
 	// drawSnakePosition(g)
 	drawSnake(g.sn)
+	drawBorder(g)
 	// Update the "frame".
 	termbox.Flush()
 }
@@ -146,7 +163,13 @@ func moveSnake(g game) game {
 }
 
 func collision(g game) bool {
-	m := g.sn.body[0]
+	m := g.sn.body[len(g.sn.body)-1]
+	if m.x == 0 || m.x == g.fieldWidth-1 {
+		return true
+	}
+	if m.y == 0 || m.y == g.fieldHeight-1 {
+		return true
+	}
 	for _, v := range g.sn.body[1 : len(g.sn.body)-1] {
 		if v.x == m.x && v.y == m.y {
 			return true
@@ -164,10 +187,10 @@ func GameOver(score int) {
 }
 
 func step(g game) game {
-	w, h := termbox.Size()
+	w, h := g.fieldWidth, g.fieldHeight
 	if g.apple == g.sn.body[len(g.sn.body)-1] {
 		g.score++
-		g.apple = coord{rand.Intn(w), rand.Intn(h)}
+		g.apple = coord{random(1, w-2), random(1, h-2)}
 		g.sn.body = append([]coord{{g.sn.body[0].x, g.sn.body[0].y}}, g.sn.body...)
 	}
 	g = moveSnake(g)
@@ -242,11 +265,11 @@ func main() {
 				}
 			}
 		case <-ticker.C:
+			g = step(g)
 			if collision(g) {
 				GameOver(g.score)
 				return
 			}
-			g = step(g)
 		}
 	}
 }
