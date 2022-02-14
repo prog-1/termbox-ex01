@@ -64,6 +64,9 @@ func newSnake(g game) snake {
 
 	g.sn.pos = []coord{{x, y}, {x - 1, y}, {x - 2, y}}
 	for {
+		if x == 0 || y == 0 {
+			break
+		}
 		if g.sn.pos[0].x == 0 || g.sn.pos[0].x == g.fieldWidth-1 || g.sn.pos[0].y == 0 || g.sn.pos[0].y == 1 || g.sn.pos[0].y == g.fieldHeight-1 {
 			g.sn.pos = []coord{{x, y}, {x - 1, y}, {x - 2, y}}
 		} else {
@@ -207,7 +210,6 @@ func HitsItself(g game) bool {
 
 func step(g game) game {
 	g.sn = moveSnake(g.sn, g.v, g.fieldWidth, g.fieldHeight)
-	draw(g)
 
 	if g.sn.pos[0] == g.ap.pos {
 		g.ap.score++
@@ -220,6 +222,7 @@ func step(g game) game {
 		os.Exit(0)
 	}
 
+	draw(g)
 	return g
 }
 
