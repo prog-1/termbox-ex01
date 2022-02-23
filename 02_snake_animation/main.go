@@ -56,10 +56,21 @@ func main() {
 	}
 	defer termbox.Close()
 
-	s := snake{pos: coord{5, 5}}
+	s := snake{pos: coord{5, 8}}
 	// This is the main event loop.
+	dir := coord{1, 0}
 	for {
-		s = step(s, coord{1, 0})
+		x, y := s.pos.x, s.pos.y
+		if x == 5 && y == 8 {
+			dir = coord{1, 0}
+		} else if x == 30 && y == 8 {
+			dir = coord{0, 1}
+		} else if x == 30 && y == 13 {
+			dir = coord{-1, 0}
+		} else if x == 5 && y == 13 {
+			dir = coord{0, -1}
+		}
+		s = step(s, dir)
 		time.Sleep(100 * time.Millisecond)
 	}
 }
